@@ -36,20 +36,20 @@ Consider always to limit the permissions scope to the profile bucket.
 
 ```json
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-				"s3:GetObject",
-				"s3:GetObjectAcl",
-				"s3:PutObject",
-				"s3:PutObjectAcl",
-				"s3:ListBucket"
-			],
-			"Resource": "arn:aws:s3:::my-bucket-name/*"
-		}
-	]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectAcl",
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+                "s3:ListBucket"
+            ],
+            "Resource": "arn:aws:s3:::my-bucket-name/*"
+        }
+    ]
 }
 ```
 
@@ -60,54 +60,54 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 
 ```json
 {
-	"name": "default", // required, profile name
-	"bucket": {
+    "name": "default", // required, profile name
+    "bucket": {
 
-		"name": "my-bucket-name",
-		"basePath": "giger/", // optional, must end with '/'
-		"region": "us-east-1" // default is "us-east-1"
-	},
-	"objects": {
+        "name": "my-bucket-name",
+        "basePath": "giger/", // optional, must end with '/'
+        "region": "us-east-1" // default is "us-east-1"
+    },
+    "objects": {
 
-		"avatar": {
+        "avatar": {
 
-			"bucketPath": "avatars",    // optional, must end with '/'
-			"maxAge": 86400,            // optional, default is 1 year
-			"mimeTypes": ["image/png"], // required
-			"acl": "public-read",       // optional, default 'public-read'
-			"async": false,             // optional, S3 async upload for big files, will save later the output URLs in another collection 'gigerAsyncUploads'
-			"constraints": {
+            "bucketPath": "avatars",    // optional, must end with '/'
+            "maxAge": 86400,            // optional, default is 1 year
+            "mimeTypes": ["image/png"], // required
+            "acl": "public-read",       // optional, default 'public-read'
+            "async": false,             // optional, S3 async upload for big files, will save later the output URLs in another collection 'gigerAsyncUploads'
+            "constraints": {
 
-				"minWidth": 200,  // optional
-				"minHeight": 200, // optional
-				"ratio": "3/2"    // aspect-ratio constraint, optional
-			},
-			"transforms": {
+                "minWidth": 200,  // optional
+                "minHeight": 200, // optional
+                "ratio": "3/2"    // aspect-ratio constraint, optional
+            },
+            "transforms": {
 
-				"L": {
-					"width": 180, // resize width to 180px, height is auto-calculated keeping aspect-ratio
-					"quality": 90
-				},
-				"S": {
-					"width": 100,
-					"quality": 90
-				},
-				"B": {
-					"width": 100,
-					"quality": 21,
-					"blur": 8 // blur image in 8px
-				}
-			}
-		},
-		// upload big files with multipart
-		"video": {
+                "L": {
+                    "width": 180, // resize width to 180px, height is auto-calculated keeping aspect-ratio
+                    "quality": 90
+                },
+                "S": {
+                    "width": 100,
+                    "quality": 90
+                },
+                "B": {
+                    "width": 100,
+                    "quality": 21,
+                    "blur": 8 // blur image in 8px
+                }
+            }
+        },
+        // upload big files with multipart
+        "video": {
 
-			"bucketPath": "videos/",
-			"maxAge": 86400,
-			"async": true,
-			"mimeTypes": ["video/mp4"]
-		}
-	}
+            "bucketPath": "videos/",
+            "maxAge": 86400,
+            "async": true,
+            "mimeTypes": ["video/mp4"]
+        }
+    }
 }
 ```
 
@@ -117,7 +117,6 @@ Run container
 
 ```bash
 docker run -p 8080:80 --env-file .env npulidom/giger
-
 ```
 
 ## Endpoints
