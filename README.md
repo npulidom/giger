@@ -111,7 +111,16 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 }
 ```
 
-## Endpoints / Usage
+## Usage
+
+Run container
+
+```bash
+docker run -p 8080:80 --env-file .env npulidom/giger
+
+```
+
+## Endpoints
 
 Upload `[POST] multipart/form-data`
 
