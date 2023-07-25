@@ -115,9 +115,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 
 Upload `[POST] multipart/form-data`
 
-> Content-Disposition: form-data; name="file"; filename="some-picture.jpeg"
-
-> Content-Type: image/jpeg
+> Content-Disposition: form-data; name="file"; type="image/jpeg"; filename="some-picture.jpeg"
 
 ```
 [POST] https://{host}/upload/:profile/:key/:tag
