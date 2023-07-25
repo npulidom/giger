@@ -22,7 +22,7 @@ const app = express()
 app.set('trust proxy', 1)
 // json support
 app.use(express.json())
-// disable X-Powered-By
+// disable X-Powered-By response header
 app.disable('x-powered-by')
 
 let server
