@@ -11,7 +11,10 @@ import fs       from 'fs'
 const TEMP_DIR = 'tmp'
 
 /**
- * Test jimp & imagemin
+ * Resize Images Test
+ * @param {object} req - The request object
+ * @param {object} res - The response object
+ * @returns {undefined}
  */
 async function resize(req, res) {
 

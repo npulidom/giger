@@ -19,6 +19,7 @@ let CRON
 
 /**
  * Initial Setup
+ * @returns {undefined}
  */
 async function setup() {
 
@@ -32,6 +33,9 @@ async function setup() {
 
 /**
  * Upload
+ * @param {object} req - The request object
+ * @param {object} res - The response object
+ * @returns {undefined}
  */
 async function upload(req, res) {
 
@@ -108,6 +112,9 @@ async function upload(req, res) {
 
 /**
  * Store Files in S3
+ * @param {object} meta - The profile metadata options
+ * @param {array} files - The input files
+ * @returns {array}
  */
 async function storeFiles(meta, files) {
 
@@ -137,6 +144,7 @@ async function storeFiles(meta, files) {
 
 /**
  * Process Async Upload
+ * @returns {undefined}
  */
 async function processAsyncUploads() {
 
@@ -180,6 +188,9 @@ async function processAsyncUploads() {
 
 /**
  * Rename File
+ * @param {string} file - The input file
+ * @param {string} newFilename - The new filename
+ * @returns {undefined}
  */
 function renameFile(file, newFilename) {
 
@@ -196,6 +207,8 @@ function renameFile(file, newFilename) {
 
 /**
  * Remove File
+ * @param {string} file - The input file
+ * @returns {undefined}
  */
 function removeFile(file) {
 
@@ -210,6 +223,7 @@ function removeFile(file) {
 
 /**
  * Remove Limbo files that couldn't be removed
+ * @returns {undefined}
  */
 function removeLimboFiles() {
 
