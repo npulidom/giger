@@ -22,6 +22,8 @@ let DB
  */
 async function connect() {
 
+	if (!process.env.MONGO_URL) throw 'MISSING_MONGO_URL_ENV_VAR'
+
 	DB = (await MongoClient.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })).db()
 }
 
