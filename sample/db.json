@@ -1,0 +1,52 @@
+{
+	"name": "default",
+	"bucket": {
+		"name": "some-bucket-name",
+		"basePath": "giger/"
+	},
+	"objects": {
+		"avatar": {
+			"bucketPath": "avatars/",
+			"maxAge": 86400,
+			"constraints": {
+				"minWidth": 300,
+				"minHeight": 300,
+				"ratio": "1/1"
+			},
+			"mimeTypes": [
+				"image/jpeg"
+			],
+			"transforms": {
+				"L": {
+					"width": 300,
+					"quality": 97
+				},
+				"M": {
+					"width": 200,
+					"quality": 94
+				},
+				"S": {
+					"width": 100,
+					"quality": 91
+				},
+				"XS": {
+					"width": 50,
+					"quality": 88
+				},
+				"B": {
+					"width": 50,
+					"quality": 21,
+					"blur": 4
+				}
+			}
+		},
+		"video": {
+			"bucketPath": "videos/",
+			"maxAge": 86400,
+			"async": true,
+			"mimeTypes": [
+				"video/mp4"
+			]
+		}
+	}
+}

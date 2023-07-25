@@ -1,0 +1,7 @@
+{
+	"verbose": false,
+	"ignore": ["tmp/*"],
+	"events": {
+		"start": "cls || clear"
+	}
+}
