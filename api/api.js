@@ -50,8 +50,7 @@ async function upload(req, res) {
 		// get metadata
 		const meta = await mongo.getMeta(profile, key)
 
-		if (!meta?.bucket) throw 'BUCKET_METADATA_NOT_FOUND'
-		if (!meta?.objects?.[key]) throw 'OBJECT_METADATA_NOT_FOUND'
+		if (!meta?.bucket) throw 'BUCKET_OBJECT_METADATA_NOT_FOUND'
 
 		// get upload profile object
 		const objectMeta = meta.objects[key]
