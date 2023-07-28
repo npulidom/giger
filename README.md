@@ -13,6 +13,7 @@ The service uses a MongoDB collection to read AWS and images configuration.
 
 - JPEG [mozjpeg](https://github.com/mozilla/mozjpeg)
 - PNG [pngquant](https://github.com/kornelski/pngquant)
+- Webp [webp](https://developers.google.com/speed/webp/docs/compression)
 
 ## Env-vars
 ```yml
@@ -71,35 +72,44 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 
         "avatar": {
 
-            "bucketPath": "avatars",    // optional, must end with '/'
-            "maxAge": 86400,            // optional, default is 1 year
-            "mimeTypes": ["image/png"], // required
-            "acl": "public-read",       // optional, default 'public-read'
-            "async": false,             // optional, S3 async upload for big files, will save later the output URLs in another collection 'gigerAsyncUploads'
+            "bucketPath": "avatars",     // optional, must end with '/'
+            "maxAge": 86400,             // optional, default is 1 year
+            "acl": "public-read",        // optional, default 'public-read'
+            "async": false,              // optional, S3 async upload for big files, will save later the output URLs in another collection 'gigerAsyncUploads'
+            "mimeTypes": ["image/jpeg"], // required, accepted mime-types ['image/jpeg','image/png', 'image/webp']
+            "outputFormat": "webp",      // optional, default is same format as input image; for a different format requires at least one transform
             "constraints": {
 
-                "minWidth": 200,  // optional
-                "minHeight": 200, // optional
+                "minWidth": 300,  // optional
+                "minHeight": 300, // optional
                 "ratio": "3/2"    // aspect-ratio constraint, optional
             },
-            "transforms": {
+            "transforms": [
 
-                "L": {
-                    "width": 180, // resize width to 180px, height is auto-calculated keeping aspect-ratio
+                {
+                    "name": "L",  // the thumb version name
+                    "width": 300, // resize width to 180px, height is auto-calculated keeping aspect-ratio
+                    "quality": 90 // quality 1-100, for PNG files must be an array threshold [.3, .6], see pngquant documentation
+                },
+                {
+                    "name": "M",
+                    "width": 150,
                     "quality": 90
                 },
-                "S": {
+                {
+                    "name": "S",
                     "width": 100,
                     "quality": 90
                 },
-                "B": {
+                {
+                    "name": "B",
                     "width": 100,
                     "quality": 21,
-                    "blur": 8 // blur image in 8px
+                    "blur": 8      // blur image in 8px
                 }
-            }
+            ]
         },
-        // upload big files with multipart
+        // supports big files uploads
         "video": {
 
             "bucketPath": "videos/",
@@ -113,7 +123,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 
 ## Usage
 
-Run container
+Run a container
 
 ```bash
 docker run -p 8080:80 --env-file .env npulidom/giger
@@ -125,8 +135,10 @@ Upload `[POST] multipart/form-data`
 
 > Content-Disposition: form-data; name="file"; type="image/jpeg"; filename="some-picture.jpeg"
 
-```
-[POST] https://{host}/upload/:profile/:key/:tag
+
+```bash
+[POST] https://{host}/upload/:profile/:object
+[POST] https://{host}/upload/:profile/:object/:tag
 
 # examples
 https://services.some-app.com/giger/upload/default/avatar
@@ -134,28 +146,50 @@ https://services.some-app.com/giger/upload/default/avatar/0
 https://services.some-app.com/giger/upload/default/avatar/123456
 ```
 - `profile` is the profile name, example `default`.
-- `key` is the object key name, example `avatar`.
+- `object` is the object name, example `avatar`.
 - `tag` is an optional custom value to replace the auto-generated file name, set to **0** to keep the auto-generated file name.
 
 
-Service can be used in a **service-path** routing, example:
+```bash
+# output response ok
+{
+    "status": "ok",
+    "urls": [
+      "https://my-bucket-name.s3.amazonaws.com/giger/avatars/avatar-298434f20f0327aa83a30dc15f880fda.jpg",
+      "https://my-bucket-name.s3.amazonaws.com/giger/avatars/avatar-298434f20f0327aa83a30dc15f880fda_L.jpg",
+      "https://my-bucket-name.s3.amazonaws.com/giger/avatars/avatar-298434f20f0327aa83a30dc15f880fda_M.jpg",
+      "https://my-bucket-name.s3.amazonaws.com/giger/avatars/avatar-298434f20f0327aa83a30dc15f880fda_S.jpg",
+      "https://my-bucket-name.s3.amazonaws.com/giger/avatars/avatar-298434f20f0327aa83a30dc15f880fda_B.jpg"
+    ],
+    "ratio": "1:1"
+}
 
-
-```
-https://services.some-app.com/giger/upload/:profile/:resource/:tag
+# output response error
+{
+    "status": "error",
+    "error": "SOME_ERROR"
+}
 ```
 
 Service also includes a `[GET] /health` endpoint for service health checks.
 
-```
+```bash
 [GET] https://{host}/health
+```
+
+
+Service can be used in a **service-path** routing proxy, example:
+
+
+```bash
+https://services.some-app.com/giger/upload/:profile/:resource/:tag
 ```
 
 ## Test
 
 Upload a file using Curl
 ```
-curl -F 'file=@tmp/lena.jpg' http://g-giger.localhost/upload/default/avatar
+curl -F 'file=@sample/lena.jpg' http://g-giger.localhost/upload/default/avatar
 
-curl -F 'file=@tmp/some-video.mp4;type=video/mp4' http://g-giger.localhost/upload/default/video
+curl -F 'file=@sample/some-video.mp4;type=video/mp4' http://g-giger.localhost/upload/default/video
 ```

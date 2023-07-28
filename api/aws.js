@@ -3,6 +3,7 @@
  */
 
 import fs from 'fs'
+import mimes from 'mime-types'
 import {
 	S3Client,
 	PutObjectCommand,
@@ -36,26 +37,30 @@ async function uploadToS3(meta, files = []) {
 
 	// S3 instance
 	const client = getClient(meta.bucket.region)
-	// params
+
+	// common params
 	const params = {
 
 		Bucket      : meta.bucket.name,
 		ACL         : meta.acl,
 		CacheControl: meta.cacheControl,
-		ContentType : meta.mime
 	}
-	//console.log('Aws (uploadToS3) -> pushing files', files, meta)
 
 	const urls = []
-	for (const file of files) {
+	for (const { file, mimetype } of files) {
 
 		try {
 
 			// check size & upload strategy
 			const { size } = fs.statSync(file)
 
+			// get extension
+			const extension = mimes.extension(mimetype).replace('jpeg', 'jpg')
+
 			// set params key path
-			params.Key = `${meta.bucket.basePath + meta.key}-${file}.${meta.extension}`.replace(`${TEMP_DIR}/`, '')
+			params.Key = `${meta.keyPrefix}-${file}.${extension}`.replace(`${TEMP_DIR}/`, '')
+			// set params content-type
+			params.ContentType = mimetype
 
 			// 100 MB bucket constraint
 			const location = size/1024/1024 <= 100 ? await putObject(client, params, file) : await multipartUpload(client, params, file)
@@ -115,13 +120,8 @@ async function multipartUpload(client, params, file) {
 
 	console.log(`Aws (multipartUpload) -> all parts upload (${multipart.Parts.length}), completing multipart upload ...`)
 
-	params = {
-
-		Bucket         : params.Bucket,
-		Key            : params.Key,
-		MultipartUpload: multipart,
-		UploadId
-	}
+	// set MultipartUpload
+	params.MultipartUpload = multipart
 
 	let { ETag } = await client.send(new CompleteMultipartUploadCommand(params))
 

@@ -3,7 +3,6 @@
  */
 
 import fs from 'fs'
-import mime from 'mime-types'
 import { CronJob } from 'cron'
 
 import * as mongo from './mongo.js'
@@ -40,7 +39,7 @@ async function setup() {
 async function upload(req, res) {
 
 	const { file } = req
-	const { profile = 'default', key = 0, tag = 0 } = req.params
+	const { profile = 'default', object = '', tag = 0 } = req.params
 
 	// input validation
 	try {
@@ -48,12 +47,12 @@ async function upload(req, res) {
 		if (!file || file.fieldname != 'file') throw 'MISSING_FILE'
 
 		// get metadata
-		const meta = await mongo.getMeta(profile, key)
+		const meta = await mongo.getMeta(profile, object)
 
 		if (!meta?.bucket) throw 'BUCKET_OBJECT_METADATA_NOT_FOUND'
 
 		// get upload profile object
-		const objectMeta = meta.objects[key]
+		const objectMeta = meta.objects[object]
 
 		if (!Array.isArray(objectMeta.mimeTypes)) throw 'OBJECT_MIME_TYPES_NOT_DEFINED'
 
@@ -70,29 +69,29 @@ async function upload(req, res) {
 
 		console.log('Api (upload) -> processing new upload', file.filename), console.time(`process-${file.filename}`)
 
-		// image transforms
-		let files = [file.path]
+		// source image
+		let files = [{ file: file.path, mimetype: file.mimetype }]
 
-		if (file.mimetype.match(/image/) && objectMeta.transforms)
-			files = files.concat(await utils.transformImage(file.path, file.filename, objectMeta.transforms))
+		// image transforms
+		if (file.mimetype.match(/image/) && Array.isArray(objectMeta.transforms)) {
+
+			files = files.concat(await utils.transformImage(file.path, file.filename, objectMeta.transforms, objectMeta.outputFormat))
+		}
 
 		// extend meta props
-		meta.bucket.basePath = (meta.bucket.basePath || '') + (objectMeta.bucketPath || '')
-		meta.key             = key
-		meta.extension       = mime.extension(file.mimetype).replace('jpeg', 'jpg')
-		meta.mime            = file.mimetype
-		meta.acl             = objectMeta.acl || 'public-read'
-		meta.cacheControl    = `max-age=${objectMeta.maxAge || 31_536_000}`
-		meta.async           = objectMeta.async || false
+		meta.keyPrefix    = (meta.bucket.basePath || '') + (objectMeta.bucketPath || '') + object
+		meta.acl          = objectMeta.acl || 'public-read'
+		meta.cacheControl = `max-age=${objectMeta.maxAge || 31_536_000}`
+		meta.async        = objectMeta.async || false
 		// clean unnecessary data
 		delete meta.objects
 
 		// store files
-		const urls = await storeFiles(meta, files)
+		const result = await storeFiles(meta, files)
 
 		console.log('Api (upload) -> completed process', file.filename), console.timeEnd(`process-${file.filename}`)
 
-		const body = { status: 'ok', urls }
+		const body = { status: 'ok', ...result }
 
 		// append aspect ratio in response
 		if (ratio) body.ratio = ratio
@@ -117,28 +116,31 @@ async function upload(req, res) {
  */
 async function storeFiles(meta, files) {
 
+	const src = files[0]
+
 	// for async S3 upload
 	if (meta.async) {
 
-		console.log('Api (storeFiles) -> async push', files[0])
+		console.log('Api (storeFiles) -> async push', src)
 
-		const key = meta.key + '-' + files[0].replace(`${TEMP_DIR}/`, '')
+		// remove some props
+		delete meta._id
 
 		// save pending upload in db
-		await mongo.insertAsyncUpload({ key, meta, files, status: 'pending', createdAt: new Date() })
+		const _id = await mongo.insertAsyncUpload({ meta, files, status: 'pending', createdAt: new Date() })
 
 		// start cron if is not running
 		if (!CRON.running) CRON.start()
 
-		return [key]
+		return { _id }
 	}
 
 	// bucket upload
 	const urls = await aws.uploadToS3(meta, files)
 	// remove local file
-	removeFile(files[0])
+	removeFile(src.file)
 
-	return urls
+	return { urls }
 }
 
 /**
@@ -157,15 +159,18 @@ async function processAsyncUploads() {
 
 			try {
 
-				console.log(`Api (processAsyncUploads) -> pushing to S3: ${files[0]}`)
+				console.log(`Api (processAsyncUploads) -> pushing to S3:`, files)
 
 				// lock status
 				await mongo.updateAsyncUpload(_id, { status: 'uploading' })
 
 				// push to S3
 				const urls = await aws.uploadToS3(meta, files)
+
+				const src = files[0]
+
 				// remove local file
-				removeFile(files[0])
+				removeFile(src.file)
 
 				await mongo.updateAsyncUpload(_id, { urls, status: 'success' })
 			}
@@ -211,9 +216,11 @@ function renameFile(file, newFilename) {
  */
 function removeFile(file) {
 
-	if (!file || !file.startsWith(`${TEMP_DIR}/`)) return
+	const tempDir = `${TEMP_DIR}/`
 
-	file = file.substring(4)
+	if (!file || !file.startsWith(tempDir)) return
+
+	file = file.substring(tempDir.length)
 
 	console.log(`Api (removeFile) -> removing temp file`, file)
 
@@ -226,6 +233,7 @@ function removeFile(file) {
  */
 function removeLimboFiles() {
 
+	// filter in size
 	const files = fs.readdirSync(TEMP_DIR).filter(f => f.length >= 32)
 
 	for (const file of files) {
@@ -238,7 +246,7 @@ function removeLimboFiles() {
 
 			const diff = new Date().valueOf() - new Date(mtime).valueOf()
 
-			// 12 hours
+			// 12 hours expiry
 			if (diff >= 43_200_000) removeFile(`${TEMP_DIR}/${file}`)
 		}
 		catch (e) { console.warn(`Api (removeLimboFiles) -> failed reading file ${file}`, e.toString()) }

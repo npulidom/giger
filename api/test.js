@@ -5,7 +5,8 @@
 import imagemin from 'imagemin'
 import mozjpeg  from 'imagemin-mozjpeg'
 import pngquant from 'imagemin-pngquant'
-import jimp     from 'jimp'
+import webp     from 'imagemin-webp'
+import sharp    from 'sharp'
 import fs       from 'fs'
 
 const TEMP_DIR = 'tmp'
@@ -22,21 +23,19 @@ async function resize(req, res) {
 
 	console.log('Test (resize) -> processing sample...'), console.time(`test-resize`)
 
-	const imageJpg = await jimp.read('sample/lena.jpg')
-	const imagePng = await jimp.read('sample/lena.png')
+	const imageJpg = sharp('sample/lena.jpg')
+	const imagePng = sharp('sample/lena.png')
 
-	await imageJpg.resize(150, jimp.AUTO)
-	await imagePng.blur(8)
+	await imageJpg.resize({ width: 300 })
+	await imagePng.resize({ width: 300 })
+	//await imagePng.blur(8)
 
-	await imageJpg.writeAsync('sample/lena-transform.jpg')
-	await imagePng.writeAsync('sample/lena-transform.png')
+	await imageJpg.toFile('sample/lena-transform.jpg')
+	await imagePng.toFile('sample/lena-transform.png')
 
-	await imagemin(['sample/*.{jpg,png}'], {
-
-		destination: `${TEMP_DIR}/`,
-		plugins    : [mozjpeg(), pngquant()],
-		quality    : 90
-	})
+	await imagemin(['sample/lena-transform.jpg'], { destination: `${TEMP_DIR}/`, plugins: [mozjpeg({ quality: 10 })] })
+	await imagemin(['sample/lena-transform.png'], { destination: `${TEMP_DIR}/`, plugins: [pngquant({ quality: [.1, .2] })] })
+	await imagemin(['sample/lena-transform.jpg'], { destination: `${TEMP_DIR}/`, plugins: [webp({ quality: 10 })] })
 
 	// clean cached file
 	fs.unlinkSync('sample/lena-transform.jpg')

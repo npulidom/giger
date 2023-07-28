@@ -30,14 +30,14 @@ async function connect() {
 /**
  * Get Metadata
  * @param {string} profile - The profile name
- * @param {string} key - The object key name
+ * @param {string} objectName - The object name
  * @returns {object}
  */
-async function getMeta(profile, key) {
+async function getMeta(profile, objectName) {
 
 	const q = { name: profile }
 
-	q[`objects.${key}`] = { $ne: null }
+	q[`objects.${objectName}`] = { $ne: null }
 
 	return await DB.collection(COLLECTIONS.default).findOne(q)
 }
@@ -69,7 +69,9 @@ async function countAsyncUploads(query = {}) {
  */
 async function insertAsyncUpload(doc) {
 
-	return await DB.collection(COLLECTIONS.asyncUploads).insertOne(doc)
+	const { insertedId } = await DB.collection(COLLECTIONS.asyncUploads).insertOne(doc)
+
+	return insertedId
 }
 
 /**

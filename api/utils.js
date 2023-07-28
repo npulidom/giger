@@ -5,7 +5,9 @@
 import imagemin from 'imagemin'
 import mozjpeg  from 'imagemin-mozjpeg'
 import pngquant from 'imagemin-pngquant'
-import jimp     from 'jimp'
+import webp     from 'imagemin-webp'
+import sharp    from 'sharp'
+import mimes    from 'mime-types'
 
 const TEMP_DIR = 'tmp'
 
@@ -17,65 +19,81 @@ const TEMP_DIR = 'tmp'
  */
 async function validateImage(filepath, { width, height, minWidth, minHeight, ratio }) {
 
-	const image = await jimp.read(filepath)
+	const image = await sharp(filepath).metadata()
 
-	if (width && width != image.bitmap.width) throw 'FILE_INVALID_WIDTH'
-	if (height && height != image.bitmap.height) throw 'FILE_INVALID_HEIGHT'
+	if (width && width != image.width) throw 'FILE_INVALID_WIDTH'
+	if (height && height != image.height) throw 'FILE_INVALID_HEIGHT'
 
-	if (minWidth && minWidth > image.bitmap.width) throw 'FILE_INVALID_WIDTH'
-	if (minHeight && minHeight > image.bitmap.height) throw 'FILE_INVALID_HEIGHT'
+	if (minWidth && minWidth > image.width) throw 'FILE_INVALID_WIDTH'
+	if (minHeight && minHeight > image.height) throw 'FILE_INVALID_HEIGHT'
 
 	if (ratio) {
 
 		const r = ratio.split('/')
 
-		if ((r[0]/r[1]).toFixed(1) != (image.bitmap.width/image.bitmap.height).toFixed(1)) throw 'FILE_INVALID_RATIO'
+		if ((r[0]/r[1]).toFixed(1) != (image.width/image.height).toFixed(1)) throw 'FILE_INVALID_RATIO'
 	}
 
 	return true
 }
 
 /**
- * Transforms
- * @param {string} filepath - The input filepath
+ * Transforms an image
+ * @param {string} filepath - The absolute input filepath
  * @param {string} filename - The input filename for destination
- * @param {object} transforms - The transform options object
+ * @param {array} transforms - The transforms array
+ * @param {array} outputFormat - The output format
  * @return {array}
  */
-async function transformImage(filepath, filename, transforms) {
+async function transformImage(filepath, filename, transforms = [], outputFormat) {
 
-	const image = await jimp.read(filepath)
-	const files = []
+	console.time(`transform-image-${filename}`)
 
-	for (const key in transforms) {
+	const image       = sharp(filepath)
+	const metadata    = await image.metadata()
+	const destination = `${TEMP_DIR}/`
+	const files       = []
 
-		const transform = transforms[key]
+	// validates output format
+	if (!['jpeg', 'png', 'webp'].includes(outputFormat)) outputFormat = metadata.format
+
+	const mimetype = mimes.lookup(outputFormat)
+
+	for (const transform of transforms) {
 
 		// ++ resize
-		if (transform.width && transform.height) await image.resize(transform.width, transform.height)
+		if (transform.width && transform.height) await image.resize({ width: transform.width, height: transform.height })
 
-		else if (transform.width) await image.resize(transform.width, jimp.AUTO)
+		else if (transform.width) await image.resize({ width: transform.width })
 
-		else if (transform.height) await image.resize(jimp.AUTO, transform.height)
+		else if (transform.height) await image.resize({ height: transform.height })
 
 		// ++ blur
 		if (transform.blur) await image.blur(transform.blur)
 
 		// ++ write files
-		const _filepath = `${TEMP_DIR}/${filename}_${key}`
+		let _filepath = `${TEMP_DIR}/${filename}_${transform.name}`
+		await image.toFile(_filepath)
 
-		await image.writeAsync(_filepath)
+		// ++ compressions
+		if (outputFormat == 'jpeg')
+			await imagemin([_filepath], { destination, plugins: [mozjpeg({ quality: transform.quality || 100 })] })
 
-		files.push(_filepath)
+		else if (outputFormat == 'webp')
+			await imagemin([_filepath], { destination, plugins: [webp({ quality: transform.quality || 100 })] })
 
-		// ++ compression
-		await imagemin(files, {
+		else if (outputFormat == 'png') {
 
-			destination: `${TEMP_DIR}/`,
-			plugins    : [mozjpeg(), pngquant()],
-			quality    : transform.quality || 100
-		})
+			const opts = Array.isArray(transform.quality) ? { quality: transform.quality } : {}
+
+			await imagemin([_filepath], { destination, plugins: [pngquant(opts)] })
+		}
+
+		// push file
+		files.push({file: _filepath, mimetype })
 	}
+
+	console.timeEnd(`transform-image-${filename}`)
 
 	return files
 }
@@ -89,10 +107,10 @@ async function transformImage(filepath, filename, transforms) {
  */
 async function nearestImageAspectRatio(filepath, maxWidth = 16, maxHeight = 16) {
 
-	const image = await jimp.read(filepath)
+	const image = await sharp(filepath).metadata()
 	// get image dimensions
-	let width  = image.bitmap.width
-	let height = image.bitmap.height
+	let width  = image.width
+	let height = image.height
 
 	const needsRotation = width > height
 

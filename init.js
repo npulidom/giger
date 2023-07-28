@@ -85,8 +85,8 @@ async function init() {
 	 */
 	app.post([
 
-		'*/upload/:profile/:key',
-		'*/upload/:profile/:key/:tag',
+		'*/upload/:profile/:object',
+		'*/upload/:profile/:object/:tag',
 
 	], uploader.single('file'), (req, res) => api.upload(req, res))
 
