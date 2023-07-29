@@ -133,7 +133,7 @@ docker run -p 8080:80 --env-file .env npulidom/giger
 
 ### **./upload**
 
-```http
+```bash
 [POST] multipart/form-data
 Content-Disposition: form-data; name="file"; type="image/jpeg"; filename="some-picture.jpeg"
 
@@ -175,7 +175,7 @@ https://services.some-app.com/giger/upload/default/avatar/123456
 
 Service also includes a `[GET] /health` endpoint for service health checks.
 
-```http
+```bash
 [GET] https://{host}/health
 ```
 
