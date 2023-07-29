@@ -56,12 +56,12 @@ Consider always to limit the permissions scope to the profile bucket.
 
 ## MongoDB JSON Struct
 
-A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created with at least the `default` **profile**. See `sample/db.json` .
+A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created with at least the `default` **profile**. See `sample/db.json`.
 
 
 ```json
 {
-    "name": "default", // required, profile name
+    "name": "default", // required, the profile name
     "bucket": {
 
         "name": "my-bucket-name",
@@ -89,7 +89,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
                 {
                     "name": "L",  // the thumb version name
                     "width": 300, // resize width to 180px, height is auto-calculated keeping aspect-ratio
-                    "quality": 90 // quality 1-100, for PNG files must be an array threshold [.3, .6], see pngquant documentation
+                    "quality": 90 // quality 1-100, for PNG files must be an array threshold [.3, .6], see pngquant docs
                 },
                 {
                     "name": "M",
@@ -105,7 +105,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
                     "name": "B",
                     "width": 100,
                     "quality": 21,
-                    "blur": 8      // blur image in 8px
+                    "blur": 8      // blur image (pixels)
                 }
             ]
         },
@@ -131,14 +131,14 @@ docker run -p 8080:80 --env-file .env npulidom/giger
 
 ## Endpoints
 
-Upload `[POST] multipart/form-data`
+### **./upload**
 
-> Content-Disposition: form-data; name="file"; type="image/jpeg"; filename="some-picture.jpeg"
+```http
+[POST] multipart/form-data
+Content-Disposition: form-data; name="file"; type="image/jpeg"; filename="some-picture.jpeg"
 
-
-```bash
-[POST] https://{host}/upload/:profile/:object
-[POST] https://{host}/upload/:profile/:object/:tag
+> https://{host}/upload/:profile/:object
+> https://{host}/upload/:profile/:object/:tag
 
 # examples
 https://services.some-app.com/giger/upload/default/avatar
@@ -147,7 +147,7 @@ https://services.some-app.com/giger/upload/default/avatar/123456
 ```
 - `profile` is the profile name, example `default`.
 - `object` is the object name, example `avatar`.
-- `tag` is an optional custom value to replace the auto-generated file name, set to **0** to keep the auto-generated file name.
+- `tag` is an optional custom value to replace the auto-generated file name, set to **0** to keep the auto-generated file name or exclude param.
 
 
 ```bash
@@ -171,18 +171,23 @@ https://services.some-app.com/giger/upload/default/avatar/123456
 }
 ```
 
+### **./health**
+
 Service also includes a `[GET] /health` endpoint for service health checks.
 
-```bash
+```http
 [GET] https://{host}/health
 ```
 
+## Application Load Balancer (ALB)
 
-Service can be used in a **service-path** routing proxy, example:
+Service can be used in a **service-path** route forwarding, example endpoints:
 
 
 ```bash
-https://services.some-app.com/giger/upload/:profile/:resource/:tag
+https://services.some.app/giger/health
+https://services.some.app/giger/upload/:profile/:object
+https://services.some.app/giger/upload/:profile/:object/:tag
 ```
 
 ## Test
