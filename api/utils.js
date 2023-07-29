@@ -90,7 +90,7 @@ async function transformImage(filepath, filename, transforms = [], outputFormat)
 		}
 
 		// push file
-		files.push({file: _filepath, mimetype })
+		files.push({ file: _filepath, mimetype })
 	}
 
 	console.timeEnd(`transform-image-${filename}`)
