@@ -82,7 +82,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 
                 "minWidth": 300,  // optional
                 "minHeight": 300, // optional
-                "ratio": "3/2"    //  optional, aspect-ratio constraint
+                "ratio": "3/2"    // optional, aspect-ratio constraint
             },
             "transforms": [
 
