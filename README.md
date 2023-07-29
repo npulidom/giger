@@ -59,7 +59,7 @@ Consider always to limit the permissions scope to the profile bucket.
 A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created with at least the `default` **profile**. See `sample/db.json`.
 
 
-```json
+```javascript
 {
     "name": "default", // required, the profile name
     "bucket": {
