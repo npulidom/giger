@@ -2,8 +2,8 @@
 	"name": "default",
 	"bucket": {
 		"name": "my-bucket-name",
-		"basePath": "giger/", 
-		"region" :"us-east-1" 
+		"basePath": "giger/",
+		"region" :"us-east-1"
 	},
 	"objects": {
 		"avatar": {
@@ -17,25 +17,25 @@
 			"mimeTypes": [
 				"image/jpeg"
 			],
-            "outputFormat" : "webp", 
+			"outputFormat" : "webp",
 			"transforms": [
 				{
-				    "name" : "L", 
+					"name" : "L",
 					"width": 720,
 					"quality": 97
 				},
-                {
-				    "name" : "M", 
+				{
+					"name" : "M",
 					"width": 480,
 					"quality": 92
-				}, 
+				},
 				{
-					"name" : "B", 
+					"name" : "B",
 					"width": 100,
 					"quality": 21,
 					"blur": 4
 				}
-			] 
+			]
 		},
 		"video": {
 			"bucketPath": "videos/",
