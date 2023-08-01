@@ -21,7 +21,7 @@ async function resize(req, res) {
 
 	if (process.env.NODE_ENV == 'production') return res.sendStatus(403)
 
-	console.log('Test (resize) -> processing sample...'), console.time(`test-resize`)
+	console.log('Test (resize) -> processing sample...'), console.time('test-resize')
 
 	const imageJpg = sharp('sample/lena.jpg')
 	const imagePng = sharp('sample/lena.png')
@@ -41,7 +41,7 @@ async function resize(req, res) {
 	fs.unlinkSync('sample/lena-transform.jpg')
 	fs.unlinkSync('sample/lena-transform.png')
 
-	console.log(`Test (resize) -> Done`), console.timeEnd(`test-resize`)
+	console.log(`Test (resize) -> Done`), console.timeEnd('test-resize')
 
 	res.json({ status: 'ok' })
 }
