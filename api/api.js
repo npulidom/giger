@@ -132,7 +132,7 @@ async function storeFiles(meta, files) {
 		// start cron if is not running
 		if (!CRON.running) CRON.start()
 
-		return { _id }
+		return { _id, ...src }
 	}
 
 	// bucket upload
