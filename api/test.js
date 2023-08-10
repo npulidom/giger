@@ -21,7 +21,7 @@ async function resize(req, res) {
 
 	if (process.env.NODE_ENV == 'production') return res.sendStatus(403)
 
-	console.log('Test (resize) -> processing sample...'), console.time('test-resize')
+	console.log('Test (resize) -> processing sample ...'), console.time('test-resize')
 
 	const imageJpg = sharp('sample/lena.jpg')
 	const imagePng = sharp('sample/lena.png')

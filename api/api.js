@@ -121,7 +121,7 @@ async function storeFiles(meta, files) {
 	// for async S3 upload
 	if (meta.async) {
 
-		console.log('Api (storeFiles) -> async push', src)
+		console.log(`Api (storeFiles) -> async push: ${JSON.stringify(src)}`)
 
 		// remove some props
 		delete meta._id
@@ -159,7 +159,7 @@ async function processAsyncUploads() {
 
 			try {
 
-				console.log(`Api (processAsyncUploads) -> pushing to S3:`, files)
+				console.log(`Api (processAsyncUploads) -> pushing to S3: ${JSON.stringify(files)}`)
 
 				// lock status
 				await mongo.updateAsyncUpload(_id, { status: 'uploading' })
@@ -222,7 +222,7 @@ function removeFile(file) {
 
 	file = file.substring(tempDir.length)
 
-	console.log(`Api (removeFile) -> removing temp file`, file)
+	console.log(`Api (removeFile) -> removing temp file: ${file}`)
 
 	fs.readdirSync(TEMP_DIR).filter(f => f.match(new RegExp(file, 'g'))).map(f => fs.unlinkSync(`${TEMP_DIR}/${f}`))
 }
