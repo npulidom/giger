@@ -4,6 +4,7 @@
 
 import { MongoClient } from 'mongodb'
 
+// ++ Consts
 const _COLLECTION = process.env.MONGO_COLLECTION || 'giger'
 const COLLECTIONS = {
 
