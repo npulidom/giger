@@ -3,42 +3,36 @@
  */
 
 import express from 'express'
-import multer from 'multer'
+import multer  from 'multer'
 import { URL } from 'url'
 
 import * as api  from './api/api.js'
 import * as test from './api/test.js'
 
-/**
- * Service Version
- */
-const version = process.env.BUILD_ID
-
-/**
- * Service Server (express)
- */
-const app = express()
-// trust proxy
-app.set('trust proxy', 1)
-// json support
-app.use(express.json())
-// disable X-Powered-By response header
-app.disable('x-powered-by')
-
-let server
-
-/**
- * Uploader
- */
+// ++ consts
+const VERSION = process.env.BUILD_ID
 const TEMP_DIR = 'tmp'
 
-const uploader = multer({ dest: `${TEMP_DIR}/`, limits: { fileSize: process.env.MAX_FILE_SIZE || Infinity } }) // bytes
+// ++ props
+let server
 
 /**
  * Init
  * @returns {undefined}
  */
 async function init() {
+
+	// ++ multer upload handler
+	const uploader = multer({ dest: `${TEMP_DIR}/`, limits: { fileSize: process.env.MAX_FILE_SIZE || Infinity } }) // bytes
+
+	// ++ express setup
+	const app = express()
+	// trust proxy
+	app.set('trust proxy', 1)
+	// json support
+	app.use(express.json())
+	// disable X-Powered-By response header
+	app.disable('x-powered-by')
 
 	/**
 	 * Express Interceptor
@@ -101,15 +95,13 @@ async function init() {
 	 */
 	app.use((req, res, next) => res.status(404).send({ status: 'error', msg: 'service not found' }))
 
-	/**
-	 * Setup
-	 */
+	// ++ API setup
 	await api.setup()
 
-	// start server
+	// ++ start server
 	server = await app.listen(80)
 
-	console.log(`Init -> server up! ${new Date().toString()}, version: ${version}`)
+	console.log(`Init -> server up at ${new Date().toString()}, version: ${VERSION}`)
 }
 
 /**
@@ -130,5 +122,5 @@ process.on('SIGINT', exitGracefully)
 process.on('SIGTERM', exitGracefully)
 
 // start app
-try       { await init() }
+try { await init() }
 catch (e) { console.error('Init -> main exception:', e) }

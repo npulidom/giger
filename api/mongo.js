@@ -4,7 +4,7 @@
 
 import { MongoClient } from 'mongodb'
 
-// ++ Consts
+// ++ consts
 const _COLLECTION = process.env.MONGO_COLLECTION || 'giger'
 const COLLECTIONS = {
 
@@ -44,7 +44,7 @@ async function getMeta(profile, objectName) {
 }
 
 /**
- * Get Async Uplaods
+ * Get Async Uploads
  * @param {object} query - The query object
  * @returns {array}
  */
@@ -54,7 +54,7 @@ async function getAsyncUploads(query = {}) {
 }
 
 /**
- * Get Count Async Uplaods
+ * Get Count Async Uploads
  * @param {object} query - The query object
  * @returns {int}
  */
@@ -64,7 +64,7 @@ async function countAsyncUploads(query = {}) {
 }
 
 /**
- * Get Async Uplaods
+ * Get Async Uploads
  * @param {object} doc - The document object
  * @returns {object}
  */
@@ -86,6 +86,9 @@ async function updateAsyncUpload(_id, doc) {
 	return await DB.collection(COLLECTIONS.asyncUploads).updateOne({ _id }, { $set: doc })
 }
 
+/**
+ * Export
+ */
 export {
 
 	connect,

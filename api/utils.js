@@ -9,6 +9,7 @@ import webp     from 'imagemin-webp'
 import sharp    from 'sharp'
 import mimes    from 'mime-types'
 
+// ++ consts
 const TEMP_DIR = 'tmp'
 
 /**
@@ -144,6 +145,9 @@ async function nearestImageAspectRatio(filepath, maxWidth = 16, maxHeight = 16) 
 	return (needsRotation ? normalRatio.reverse() : normalRatio).join(':')
 }
 
+/**
+ * Export
+ */
 export {
 
 	validateImage,

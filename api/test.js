@@ -9,6 +9,7 @@ import webp     from 'imagemin-webp'
 import sharp    from 'sharp'
 import fs       from 'fs'
 
+// ++ consts
 const TEMP_DIR = 'tmp'
 
 /**
@@ -46,6 +47,9 @@ async function resize(req, res) {
 	res.json({ status: 'ok' })
 }
 
+/**
+ * Export
+ */
 export {
 
 	resize

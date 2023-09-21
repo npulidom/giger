@@ -12,6 +12,7 @@ import {
 	CompleteMultipartUploadCommand
 } from '@aws-sdk/client-s3'
 
+// ++ consts
 const TEMP_DIR = 'tmp'
 const DEFAULT_CHUCK_SIZE = 50*1024*1024 // 50 MB for chunk size
 
@@ -244,6 +245,9 @@ function getS3URL(region, bucketName, key) {
 	return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`
 }
 
+/**
+ * Export
+ */
 export {
 
 	uploadToS3

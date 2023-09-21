@@ -9,6 +9,7 @@ import * as mongo from './mongo.js'
 import * as aws   from './aws.js'
 import * as utils from './utils.js'
 
+// ++ consts
 const TEMP_DIR = 'tmp'
 
 /**
@@ -253,6 +254,9 @@ function removeLimboFiles() {
 	}
 }
 
+/**
+ * Export
+ */
 export {
 
 	setup,
