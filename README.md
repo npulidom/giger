@@ -1,5 +1,4 @@
-Giger
-=====
+# Giger
 
 Container service for image resize/compression with AWS S3 uploader.
 The service uses a MongoDB collection to read AWS and images configuration.
@@ -16,6 +15,7 @@ The service uses a MongoDB collection to read AWS and images configuration.
 - Webp [webp](https://developers.google.com/speed/webp/docs/compression)
 
 ## Env-vars
+
 ```yml
 MONGO_URL: MongoDB URL, required (i.e. mongodb://mongo/app)
 MONGO_COLLECTION: Mongo collection name, default is 'giger' (optional)
@@ -57,7 +57,6 @@ Consider always to limit the permissions scope to the profile bucket.
 ## MongoDB JSON Struct
 
 A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created with at least the `default` **profile**. See `sample/db.json`.
-
 
 ```javascript
 {
@@ -145,10 +144,10 @@ https://services.some-app.com/giger/upload/default/avatar
 https://services.some-app.com/giger/upload/default/avatar/0
 https://services.some-app.com/giger/upload/default/avatar/123456
 ```
+
 - `profile` is the profile name, example `default`.
 - `object` is the object name, example `avatar`.
 - `tag` is an optional custom value to replace the auto-generated file name, set to **0** to keep the auto-generated file name or exclude param.
-
 
 ```bash
 # output response ok
@@ -183,7 +182,6 @@ Service also includes a `[GET] /health` endpoint for service health checks.
 
 Service can be used in a **service-path** route forwarding, example endpoints:
 
-
 ```bash
 https://services.some.app/giger/health
 https://services.some.app/giger/upload/:profile/:object
@@ -193,7 +191,8 @@ https://services.some.app/giger/upload/:profile/:object/:tag
 ## Test
 
 Upload a file using Curl
-```
+
+```bash
 curl -F 'file=@sample/lena.jpg' http://g-giger.localhost/upload/default/avatar
 
 curl -F 'file=@sample/some-video.mp4;type=video/mp4' http://g-giger.localhost/upload/default/video
