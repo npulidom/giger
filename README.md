@@ -130,7 +130,7 @@ docker run -p 8080:80 --env-file .env npulidom/giger
 
 ## Endpoints
 
-### **./upload**
+### POST ./upload
 
 ```bash
 [POST] multipart/form-data
@@ -170,7 +170,7 @@ https://services.some-app.com/giger/upload/default/avatar/123456
 }
 ```
 
-### **./health**
+### GET ./health
 
 Service also includes a `[GET] /health` endpoint for service health checks.
 
