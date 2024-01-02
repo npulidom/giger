@@ -172,7 +172,7 @@ https://services.some-app.com/giger/upload/default/avatar/123456
 
 ### GET ./health
 
-Service also includes a `[GET] /health` endpoint for service health checks.
+Service also includes a `./health` endpoint for service health checks.
 
 ```bash
 [GET] https://{host}/health
