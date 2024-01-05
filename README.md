@@ -71,7 +71,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 
         "avatar": {
 
-            "bucketPath": "avatars",     // optional, must end with '/'
+            "bucketPath": "avatars/",    // optional, must end with '/'
             "maxAge": 86400,             // optional, default is 1 year
             "acl": "public-read",        // optional, default 'public-read'
             "async": false,              // optional, S3 async upload for big files, will save later the output URLs in another collection 'gigerAsyncUploads'
