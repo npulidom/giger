@@ -87,7 +87,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 
                 {
                     "name": "L",  // the thumb version name
-                    "width": 300, // resize width to 180px, height is auto-calculated keeping aspect-ratio
+                    "width": 300, // resize width, height is auto-calculated keeping aspect-ratio
                     "quality": 90 // quality 1-100, for PNG files must be an array threshold [.3, .6], see pngquant docs
                 },
                 {
