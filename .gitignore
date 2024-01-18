@@ -6,4 +6,5 @@ node_modules
 *-lock.*
 *.log
 *.env*
+*.mp4
 tmp
