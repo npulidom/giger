@@ -7,14 +7,6 @@ RUN apt-get update && \
 	apt-get clean && \
 	setcap 'cap_net_bind_service=+ep' /usr/local/bin/node
 
-# install deps
-RUN apt-get update && \
-	apt-get install -y \
-	libjpeg62-turbo \
-	pngquant \
-	# clean
-	&& apt-get clean
-
 # app directory
 WORKDIR /home/node/app
 

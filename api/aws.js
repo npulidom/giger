@@ -13,7 +13,6 @@ import {
 } from '@aws-sdk/client-s3'
 
 // ++ consts
-const TEMP_DIR = 'tmp'
 const DEFAULT_CHUCK_SIZE = 50*1024*1024 // 50 MB for chunk size
 
 /**
@@ -21,57 +20,53 @@ const DEFAULT_CHUCK_SIZE = 50*1024*1024 // 50 MB for chunk size
  * @param {string} region - The client region
  * @returns {object}
  */
-function getClient(region = 'us-east-1') {
+function getClient(region) {
 
 	return new S3Client({ region })
 }
 
 /**
  * Upload a resource to S3
- * @param {object} meta - The metadata profile
+ * @param {object} option - The input options
  * @param {array} files - The files array
  * @returns {array} - The output URLs
  */
-async function uploadToS3(meta, files = []) {
+async function uploadToS3({ bucketName, basePath, region, maxAge, acl }, files = []) {
 
 	if (!files.length) return
-
-	// S3 instance
-	const client = getClient(meta.bucket.region)
 
 	// common params
 	const params = {
 
-		Bucket      : meta.bucket.name,
-		ACL         : meta.acl,
-		CacheControl: meta.cacheControl,
+		Bucket      : bucketName,
+		CacheControl: `max-age=${maxAge || 31_540_000}`, // 1 year default
 	}
+	// set ACL?
+	if (acl) params.ACL = acl
 
 	const urls = []
-	for (const { file, mimetype } of files) {
+	for (const { path, filename, mimetype } of files) {
 
 		try {
 
 			// check size & upload strategy
-			const { size } = fs.statSync(file)
-
+			const { size } = fs.statSync(path)
 			// get extension
-			const extension = mimes.extension(mimetype).replace('jpeg', 'jpg')
+			const extension = mimes.extension(mimetype)
 
 			// set params key path
-			params.Key = `${meta.keyPrefix}-${file}.${extension}`.replace(`${TEMP_DIR}/`, '')
+			params.Key = `${basePath}${filename}.${extension}`
 			// set params content-type
 			params.ContentType = mimetype
 
 			// 100 MB bucket constraint
-			const location = size/1024/1024 <= 100 ? await putObject(client, params, file) : await multipartUpload(client, params, file)
-
+			const location = size/1024/1024 <= 100 ? await putObject(path, region, params) : await multipartUpload(path, region, params)
 			// push resource URL
 			urls.push(location)
 		}
 		catch (e) {
 
-			console.error(`Aws (uploadToS3) -> S3 upload failed [${file}]`, e.toString())
+			console.error(`Aws (uploadToS3) -> upload failed ${filename}`, e.toString())
 			throw e
 		}
 	}
@@ -81,67 +76,71 @@ async function uploadToS3(meta, files = []) {
 
 /**
  * PUT object upload
- * @param {object} client - The S3 client
+ * @param {string} path - The input file path
+ * @param {string} region - The AWS region
  * @param {object} params - The command params
- * @param {string} file - The input file
  * @returns {string} - The output URL
  */
-async function putObject(client, params, file) {
+async function putObject(path, region, params) {
+
+	// S3 instance
+	const client = getClient(region)
 
 	// set body
-	params.Body = fs.readFileSync(file)
+	params.Body = fs.readFileSync(path)
 
 	const { ETag } = await client.send(new PutObjectCommand(params))
-
 	if (!ETag) throw 'PUT_UPLOAD_UNEXPECTED_RESPONSE'
 
-	return getS3URL(await client.config.region(), params.Bucket, params.Key)
+	return getS3URL(region, params.Bucket, params.Key)
 }
 
 /**
  * Multipart Upload
- * @param {object} client - The S3 client
+ * @param {string} path - The input file path
+ * @param {string} region - The AWS region
  * @param {object} params - The command params
- * @param {string} file - The input file
  * @returns {string} - The output URL
  */
-async function multipartUpload(client, params, file) {
+async function multipartUpload(path, region, params) {
+
+	// S3 instance
+	const client = getClient(region)
 
 	const { UploadId } = await client.send(new CreateMultipartUploadCommand(params))
-
 	if (!UploadId) throw 'MULTIPART_UPLOAD_UNEXPECTED_RESPONSE_UPLOAD_ID'
 
 	// set UploadId
 	params.UploadId = UploadId
-
 	console.log(`Aws (multipartUpload) -> multipart created, UploadId: ${UploadId}`)
 
+	// read stream
+	const stream = fs.createReadStream(path)
 	// trigger chunks upload
-	const multipart = await multipartStream(client, params, file, DEFAULT_CHUCK_SIZE)
+	const multipart = await multipartStream(stream, client, params, DEFAULT_CHUCK_SIZE)
 
-	console.log(`Aws (multipartUpload) -> all parts upload (${multipart.Parts.length}), completing multipart upload ...`)
+	console.log(`Aws (multipartUpload) -> all chunks upload (${multipart.Parts.length}), completing multipart upload ...`)
 
 	// set MultipartUpload
 	params.MultipartUpload = multipart
 
 	let { ETag } = await client.send(new CompleteMultipartUploadCommand(params))
-
 	if (!ETag) throw 'MULTIPART_UPLOAD_UNEXPECTED_RESPONSE_LOCATION'
 
 	console.log(`Aws (multipartUpload) -> upload completed, ETag: ${ETag}, Key: ${params.Key}`)
 
-	return getS3URL(await client.config.region(), params.Bucket, params.Key)
+	return getS3URL(region, params.Bucket, params.Key)
 }
 
 /**
  * Multipart Upload (Promise)
-* @param {object} client - The S3 client
+ * @param {object} stream - The read stream
+ * @param {object} client - The AWS client object
  * @param {object} params - The command params
- * @param {string} file - The input file
  * @param {string} chunkSize - The chunk size
  * @returns {string} - The output URL
  */
-function multipartStream(client, { Bucket, Key, UploadId }, file, chunkSize) {
+function multipartStream(stream, client, { Bucket, Key, UploadId }, chunkSize) {
 
 	return new Promise((resolve, reject) => {
 
@@ -150,13 +149,10 @@ function multipartStream(client, { Bucket, Key, UploadId }, file, chunkSize) {
 		let partNumber = 1
 		let chunkAccumulator = null
 
-		// read stream
-		const stream = fs.createReadStream(file)
-
 		// on error
 		stream.on('error', e => reject(e))
 		// on data
-		stream.on('data', chunk => {
+		stream.on('data', async chunk => {
 
 			chunkAccumulator = chunkAccumulator === null ? chunk : Buffer.concat([chunkAccumulator, chunk])
 
@@ -176,26 +172,26 @@ function multipartStream(client, { Bucket, Key, UploadId }, file, chunkSize) {
 				ContentLength: chunkAccumulator.length
 			}
 
-			// upload part command
-			client.send(new UploadPartCommand(partParams))
-			.then(({ ETag }) => {
+			try {
 
-				console.log(`Aws (multipartStream) -> data chunk uploaded, Part: ${partParams.PartNumber}, ETag: ${ETag}, Size: ${chunkMB} MB`)
+				// upload part command
+				const { ETag } = await client.send(new UploadPartCommand(partParams))
+				console.log(`Aws (multipartStream) -> chunk uploaded, Part: ${partParams.PartNumber}, ETag: ${ETag}, Size: ${chunkMB} MB`)
 
 				multipartMap.Parts.push({ ETag, PartNumber: partParams.PartNumber })
 				chunkAccumulator = null
 				partNumber++
 				// resume to read the next chunk
 				stream.resume()
-			})
-			.catch(e => {
+			}
+			catch (e) {
 
-				console.error(`Aws (multipartStream) -> error uploading chunk to S3: ${e.message}`)
+				console.error(`Aws (multipartStream) -> error uploading chunk to S3: ${e.toString()}`)
 				reject(e)
-			})
+			}
 		})
 		// on close
-		stream.on('close', () => {
+		stream.on('close', async () => {
 
 			if (!chunkAccumulator) return
 
@@ -210,22 +206,22 @@ function multipartStream(client, { Bucket, Key, UploadId }, file, chunkSize) {
 				ContentLength: chunkAccumulator.length
 			}
 
-			// upload part command
-			client.send(new UploadPartCommand(partParams))
-			.then(({ ETag }) => {
+			try {
 
-				console.log(`Aws (multipartStream) -> last data chunk uploaded, Part: ${partParams.PartNumber}, ETag: ${ETag}, Size: ${chunkMB} MB`)
+				// upload part command
+				const { ETag } = await client.send(new UploadPartCommand(partParams))
+				console.log(`Aws (multipartStream) -> last chunk uploaded, Part: ${partParams.PartNumber}, ETag: ${ETag}, Size: ${chunkMB} MB`)
 
 				multipartMap.Parts.push({ ETag, PartNumber: partParams.PartNumber })
 				chunkAccumulator = null
 
 				resolve(multipartMap)
-			})
-			.catch(e => {
+			}
+			catch (e) {
 
-				console.error(`Aws (multipartStream) -> error uploading last chunk to S3: ${e.message}`)
+				console.error(`Aws (multipartStream) -> error uploading last chunk to S3: ${e.toString()}`)
 				reject(e)
-			})
+			}
 		})
 	})
 }

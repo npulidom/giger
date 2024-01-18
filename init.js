@@ -22,6 +22,9 @@ let server
  */
 async function init() {
 
+	// ++ API setup
+	await api.setup()
+
 	// ++ multer upload handler
 	const uploader = multer({ dest: `${TEMP_DIR}/`, limits: { fileSize: process.env.MAX_FILE_SIZE || Infinity } }) // bytes
 
@@ -50,7 +53,11 @@ async function init() {
 				const whitelist = process.env.ALLOWED_ORIGINS.split(',').map(o => new URL(o).host)
 
 				// check Origin header if present
-				if (whitelist.includes(host)) res.set('Access-Control-Allow-Origin', `${protocol}//${host}`), res.set('Vary', 'Origin')
+				if (whitelist.includes(host)) {
+
+					res.set('Access-Control-Allow-Origin', `${protocol}//${host}`)
+					res.set('Vary', 'Origin')
+				}
 			}
 			catch (e) { return res.sendStatus(403) }
 		}
@@ -95,12 +102,8 @@ async function init() {
 	 */
 	app.use((req, res, next) => res.status(404).send({ status: 'error', msg: 'service not found' }))
 
-	// ++ API setup
-	await api.setup()
-
 	// ++ start server
 	server = await app.listen(80)
-
 	console.log(`Init -> server up at ${new Date().toString()}, version: ${VERSION}`)
 }
 

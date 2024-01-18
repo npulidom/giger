@@ -21,19 +21,24 @@
 			"transforms": [
 				{
 					"name" : "L",
-					"width": 720,
-					"quality": 97
+					"width" : 512,
+					"quality" : 97
 				},
 				{
 					"name" : "M",
-					"width": 480,
-					"quality": 92
+					"width" : 256,
+					"quality" : 90
+				},
+				{
+					"name" : "S",
+					"width" : 128,
+					"quality" : 84
 				},
 				{
 					"name" : "B",
-					"width": 100,
-					"quality": 21,
-					"blur": 4
+					"width" : 128,
+					"quality" : 21,
+					"blur" : 4
 				}
 			]
 		},

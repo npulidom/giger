@@ -2,25 +2,22 @@
  * Utils
  */
 
-import imagemin from 'imagemin'
-import mozjpeg  from 'imagemin-mozjpeg'
-import pngquant from 'imagemin-pngquant'
-import webp     from 'imagemin-webp'
-import sharp    from 'sharp'
-import mimes    from 'mime-types'
+import fs    from 'fs'
+import mimes from 'mime-types'
+import sharp from 'sharp'
 
 // ++ consts
 const TEMP_DIR = 'tmp'
 
 /**
  * Validate Image constraints
- * @param {string} filepath - The input filepath
+ * @param {string} path - The file path
  * @param {object} options - The validation options constraints
  * @returns {boolean}
  */
-async function validateImage(filepath, { width, height, minWidth, minHeight, ratio }) {
+async function validateImage(path, { width, height, minWidth, minHeight, ratio }) {
 
-	const image = await sharp(filepath).metadata()
+	const image = await sharp(path).metadata()
 
 	if (width && width != image.width) throw 'FILE_INVALID_WIDTH'
 	if (height && height != image.height) throw 'FILE_INVALID_HEIGHT'
@@ -40,75 +37,56 @@ async function validateImage(filepath, { width, height, minWidth, minHeight, rat
 
 /**
  * Transforms an image
- * @param {string} filepath - The absolute input filepath
- * @param {string} filename - The input filename for destination
+ * @param {object} file - The file object
  * @param {array} transforms - The transforms array
- * @param {array} outputFormat - The output format
+ * @param {array} outputFormat - The output format, default is webp
  * @return {array}
  */
-async function transformImage(filepath, filename, transforms = [], outputFormat) {
+async function transformImage({ path, filename }, transforms = [], outputFormat = 'webp') {
 
-	console.time(`transform-image-${filename}`)
+	console.time(`transform-image_${filename}`)
 
-	const image       = sharp(filepath)
-	const metadata    = await image.metadata()
-	const destination = `${TEMP_DIR}/`
-	const files       = []
+	const image = sharp(path)
+	const files = []
 
-	// validates output format
-	if (!['jpeg', 'png', 'webp'].includes(outputFormat)) outputFormat = metadata.format
+	for (const { name: transformName, width, height, blur, quality = 100 } of transforms) {
 
-	const mimetype = mimes.lookup(outputFormat)
-
-	for (const transform of transforms) {
+		// ignore transform without name
+		if (!transformName) continue
 
 		// ++ resize
-		if (transform.width && transform.height) await image.resize({ width: transform.width, height: transform.height })
-
-		else if (transform.width) await image.resize({ width: transform.width })
-
-		else if (transform.height) await image.resize({ height: transform.height })
+		if (width && height) await image.resize({ width, height })
+		else if (width) await image.resize({ width })
+		else if (height) await image.resize({ height })
 
 		// ++ blur
-		if (transform.blur) await image.blur(transform.blur)
+		if (blur) await image.blur(blur)
 
-		// ++ write files
-		let _filepath = `${TEMP_DIR}/${filename}_${transform.name}`
-		await image.toFile(_filepath)
+		const _filename  = `${filename}_${transformName}`
+		const _path      = `${TEMP_DIR}/${_filename}`
+		const _mimetype  = mimes.lookup(outputFormat)
 
-		// ++ compressions
-		if (outputFormat == 'jpeg')
-			await imagemin([_filepath], { destination, plugins: [mozjpeg({ quality: transform.quality || 100 })] })
-
-		else if (outputFormat == 'webp')
-			await imagemin([_filepath], { destination, plugins: [webp({ quality: transform.quality || 100 })] })
-
-		else if (outputFormat == 'png') {
-
-			const opts = Array.isArray(transform.quality) ? { quality: transform.quality } : {}
-
-			await imagemin([_filepath], { destination, plugins: [pngquant(opts)] })
-		}
+		// saves transformed image to disk
+		await image.toFormat(outputFormat, { quality }).toFile(_path)
 
 		// push file
-		files.push({ file: _filepath, mimetype })
+		files.push({ path: _path, filename: _filename, mimetype: _mimetype })
 	}
 
-	console.timeEnd(`transform-image-${filename}`)
-
+	console.timeEnd(`transform-image_${filename}`)
 	return files
 }
 
 /**
  * Nearest Aspect Ratio calculator for images
- * @param {string} filepath - The input filepath
+ * @param {string} path - The input file path
  * @param {integer} maxWidth - The maximum width in the nearest normal aspect ratio (optional)
  * @param {integer} maxWidth - The maximum height in the nearest normal aspect ratio (optional)
  * @return {string}
  */
-async function nearestImageAspectRatio(filepath, maxWidth = 16, maxHeight = 16) {
+async function nearestImageAspectRatio(path, maxWidth = 16, maxHeight = 16) {
 
-	const image = await sharp(filepath).metadata()
+	const image = await sharp(path).metadata()
 	// get image dimensions
 	let width  = image.width
 	let height = image.height
@@ -146,11 +124,74 @@ async function nearestImageAspectRatio(filepath, maxWidth = 16, maxHeight = 16) 
 }
 
 /**
+ * Rename File
+ * @param {string} file - The input file
+ * @param {string} newFilename - The new filename
+ * @returns {object}
+ */
+function renameFile({ path, filename }, newFilename) {
+
+	if (!path || !filename) return
+
+	const newPath = path.replace(filename, newFilename)
+	// rename file
+	fs.renameSync(path, newPath)
+
+	return { path: newPath, filename: newFilename}
+}
+
+/**
+ * Remove File
+ * @param {string} filename - The file name in temp directory
+ * @returns {undefined}
+ */
+function removeFile(filename) {
+
+	if (!filename) return
+
+	const files = fs.readdirSync(TEMP_DIR).filter(f => f.match(new RegExp(filename, 'g')))
+
+	for (const f of files) {
+
+		console.log(`Utils (removeFile) -> removing file: ${TEMP_DIR}/${f}`)
+		fs.unlinkSync(`${TEMP_DIR}/${f}`)
+	}
+}
+
+/**
+ * Remove Limbo files that couldn't be removed
+ * @returns {undefined}
+ */
+function removeLimboFiles() {
+
+	// filter in size
+	const files = fs.readdirSync(TEMP_DIR).filter(f => f.length >= 32)
+
+	for (const f of files) {
+
+		try {
+
+			const { mtime } = fs.statSync(`${TEMP_DIR}/${f}`)
+			if (!mtime) continue
+
+			const diff = new Date().valueOf() - new Date(mtime).valueOf()
+			// 12 hours expiry
+			if (diff >= 43_200_000)
+				removeFile(f)
+		}
+		catch (e) { console.warn(`Utils (removeLimboFiles) -> failed reading file ${f}`, e.toString()) }
+	}
+}
+
+/**
  * Export
  */
 export {
 
 	validateImage,
 	transformImage,
-	nearestImageAspectRatio
+	nearestImageAspectRatio,
+	renameFile,
+	removeFile,
+	removeLimboFiles,
 }

@@ -1,18 +1,19 @@
 # Giger
 
-Container service for image resize/compression with AWS S3 uploader.
-The service uses a MongoDB collection to read AWS and images configuration.
+Container service for image resize/compression with AWS S3 uploader (or S3 standalone uploads).
+The service uses a MongoDB collection to read resize/upload operation, support multiples profiles.
 
-- Resize images in multiple thumbs.
+- Resize images in multiple sizes.
 - Validates image dimensions / aspect-ratio.
-- Supports large files with async upload.
-- Built on NodeJs.
+- Supports large files (more than 100 MB) with async upload (multipart).
+- Built on NodeJs and Sharp (`libvips`).
 
 ## Images supported formats
 
-- JPEG [mozjpeg](https://github.com/mozilla/mozjpeg)
-- PNG [pngquant](https://github.com/kornelski/pngquant)
-- Webp [webp](https://developers.google.com/speed/webp/docs/compression)
+- `webp`
+- `avif`
+- `jpeg`
+- `png`
 
 ## Env-vars
 
@@ -64,7 +65,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
     "bucket": {
 
         "name": "my-bucket-name",
-        "basePath": "giger/", // optional, must end with '/'
+        "basePath": "giger/", // optional, default is root
         "region": "us-east-1" // default is "us-east-1"
     },
     "objects": {
@@ -72,11 +73,11 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
         "avatar": {
 
             "bucketPath": "avatars/",    // optional, must end with '/'
-            "maxAge": 86400,             // optional, default is 1 year
-            "acl": "public-read",        // optional, default 'public-read'
-            "async": false,              // optional, S3 async upload for big files, will save later the output URLs in another collection 'gigerAsyncUploads'
             "mimeTypes": ["image/jpeg"], // required, accepted mime-types ['image/jpeg','image/png', 'image/webp']
-            "outputFormat": "webp",      // optional, default is same format as input image; for a different format requires at least one transform
+            "outputFormat": "webp",      // optional, default is same format as input image; options: webp, avif, jpeg, png
+            "maxAge": 86400,             // optional, default is 1 year
+            "acl": "public-read",        // optional, default is private
+            "async": false,              // optional, async upload for big files, the output URLs will be saved later in another collection 'gigerAsyncUploads'
             "constraints": {
 
                 "minWidth": 300,  // optional
@@ -86,19 +87,19 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
             "transforms": [
 
                 {
-                    "name": "L",  // the thumb version name
+                    "name": "L",  // the thumbnail version name
                     "width": 300, // resize width, height is auto-calculated keeping aspect-ratio
-                    "quality": 90 // quality 1-100, for PNG files must be an array threshold [.3, .6], see pngquant docs
+                    "quality": 90 // quality 1-100
                 },
                 {
                     "name": "M",
                     "width": 150,
-                    "quality": 90
+                    "quality": 80
                 },
                 {
                     "name": "S",
                     "width": 100,
-                    "quality": 90
+                    "quality": 70
                 },
                 {
                     "name": "B",
@@ -112,9 +113,9 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
         "video": {
 
             "bucketPath": "videos/",
+            "mimeTypes": ["video/mp4"],
             "maxAge": 86400,
-            "async": true,
-            "mimeTypes": ["video/mp4"]
+            "async": true
         }
     }
 }
