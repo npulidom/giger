@@ -2,13 +2,7 @@
  * Test
  */
 
-import fs    from 'fs'
-import sharp from 'sharp'
-
 import * as api from './api.js'
-
-// ++ consts
-const TEMP_DIR = 'tmp'
 
 /**
  * Resize Images Test
