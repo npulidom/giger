@@ -94,7 +94,7 @@ async function init() {
 	/**
 	 * GET - Test Resize
 	 */
-	if (process.env.NODE_ENV !== 'production')
+	if (process.env.NODE_ENV == 'development')
 		app.get('*/test/resize', (req, res) => test.resize(req, res))
 
 	/**
