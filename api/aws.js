@@ -4,17 +4,11 @@
 
 import fs from 'fs'
 import mimes from 'mime-types'
-import {
-	S3Client,
-	PutObjectCommand,
-	UploadPartCommand,
-	CreateMultipartUploadCommand,
-	CompleteMultipartUploadCommand,
-	AbortMultipartUploadCommand,
-} from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { Upload } from "@aws-sdk/lib-storage"
 
 // ++ consts
-const DEFAULT_CHUCK_SIZE = 50*1024*1024 // 50 MB for chunk size
+const MULTIPART_CHUCK_SIZE = 50*1024*1024 // 50 MB for chunk size
 
 /**
  * Get S3 client
@@ -23,12 +17,7 @@ const DEFAULT_CHUCK_SIZE = 50*1024*1024 // 50 MB for chunk size
  */
 function getClient(region) {
 
-	const opts = {}
-
-	if (parseInt(process.env.AWS_S3_TRANSFER_ACCELERATION))
-		opts.useAccelerateEndpoint = true
-
-	return new S3Client({ region, ...opts })
+	return new S3Client({ region })
 }
 
 /**
@@ -66,9 +55,10 @@ async function uploadToS3({ bucketName, basePath, region, maxAge, acl }, files =
 			params.ContentType = mimetype
 
 			// 100 MB bucket constraint
-			const location = size/1024/1024 <= 100 ? await putObject(path, region, params) : await multipartUpload(path, region, params)
-			// push resource URL
-			urls.push(location)
+			if (size/1024/1024 <= 100)
+				urls.push(await putObject(path, region, params))
+			else
+				urls.push(await multipartUpload(path, region, params))
 		}
 		catch (e) {
 
@@ -113,131 +103,40 @@ async function multipartUpload(path, region, params) {
 	// S3 instance
 	const client = getClient(region)
 
-	const { UploadId } = await client.send(new CreateMultipartUploadCommand(params))
-	if (!UploadId) throw 'MULTIPART_UPLOAD_UNEXPECTED_RESPONSE_UPLOAD_ID'
-
-	// set UploadId
-	console.log(`Aws (multipartUpload) -> multipart created, UploadId: ${UploadId}`)
-	params.UploadId = UploadId
-
 	try {
+
+		console.log(`Aws (multipartUpload) -> new multipart upload: ${path}`)
+
 		// read stream
 		const stream = fs.createReadStream(path)
-		// trigger chunks upload
-		const multipart = await multipartStream(stream, client, params, DEFAULT_CHUCK_SIZE)
+		// set body buffer
+		params.Body = stream
 
-		console.log(`Aws (multipartUpload) -> all chunks upload (${multipart.Parts.length}), completing multipart upload ...`)
+		// trigger multipart upload
+		const uploads = new Upload({
 
-		// set MultipartUpload
-		params.MultipartUpload = multipart
+			client,
+			params,
+			queueSize: 2,
+			partSize: MULTIPART_CHUCK_SIZE,
+			leavePartsOnError: false
+		})
+		// progress listener
+		uploads.on(`httpUploadProgress`, progress => console.log(`Aws (multipartUpload) -> upload-progress file: ${path}`, progress))
 
-		const { ETag } = await client.send(new CompleteMultipartUploadCommand(params))
-		if (!ETag) throw 'MULTIPART_UPLOAD_UNEXPECTED_RESPONSE_LOCATION'
+		// trigger chunk uploads
+		await uploads.done()
 
-		console.log(`Aws (multipartUpload) -> upload completed, ETag: ${ETag}, Key: ${params.Key}`)
+		console.log(`Aws (multipartUpload) -> multipart upload completed: ${path}`)
+
 		// get location
 		return getS3URL(region, params.Bucket, params.Key)
 	}
 	catch (e) {
 
-		console.error(`Aws (multipartUpload) -> upload failed, UploadId: ${params.UploadId}`)
-		// abort multipart upload
-		await client.send(new AbortMultipartUploadCommand(params))
+		console.error(`Aws (multipartUpload) -> multipart upload failed: ${path}`, e.toString())
+		throw e
 	}
-}
-
-/**
- * Multipart Upload (Promise)
- * @param {object} stream - The read stream
- * @param {object} client - The AWS client object
- * @param {object} params - The command params
- * @param {string} chunkSize - The chunk size
- * @returns {string} - The output URL
- */
-function multipartStream(stream, client, { Bucket, Key, UploadId }, chunkSize) {
-
-	return new Promise((resolve, reject) => {
-
-		const parts = []
-
-		let partNumber = 1
-		let chunkAccumulator = null
-
-		// on error
-		stream.on('error', e => reject(e))
-		// on data
-		stream.on('data', async chunk => {
-
-			chunkAccumulator = chunkAccumulator === null ? chunk : Buffer.concat([chunkAccumulator, chunk])
-
-			if (chunkAccumulator.length <= chunkSize) return
-
-			// pause the stream to upload this chunk to S3
-			stream.pause()
-
-			const chunkMB = parseFloat(chunkAccumulator.length/1024/1024).toFixed(2)
-			const partParams = {
-
-				Bucket,
-				Key,
-				UploadId,
-				PartNumber   : partNumber,
-				Body         : chunkAccumulator,
-				ContentLength: chunkAccumulator.length
-			}
-
-			try {
-
-				// upload part command
-				const { ETag } = await client.send(new UploadPartCommand(partParams))
-				console.log(`Aws (multipartStream) -> chunk uploaded, Part: ${partParams.PartNumber}, ETag: ${ETag}, Size: ${chunkMB} MB`)
-
-				parts.push({ ETag, PartNumber: partParams.PartNumber })
-				chunkAccumulator = null
-				partNumber++
-				// resume to read the next chunk
-				stream.resume()
-			}
-			catch (e) {
-
-				console.error(`Aws (multipartStream) -> error uploading chunk to S3: ${e.toString()}`)
-				reject(e)
-			}
-		})
-		// on close
-		stream.on('close', async () => {
-
-			if (!chunkAccumulator) return
-
-			const chunkMB = parseFloat(chunkAccumulator.length/1024/1024).toFixed(2)
-			const partParams = {
-
-				Bucket,
-				Key,
-				UploadId,
-				PartNumber   : partNumber,
-				Body         : chunkAccumulator,
-				ContentLength: chunkAccumulator.length
-			}
-
-			try {
-
-				// upload part command
-				const { ETag } = await client.send(new UploadPartCommand(partParams))
-				console.log(`Aws (multipartStream) -> last chunk uploaded, Part: ${partParams.PartNumber}, ETag: ${ETag}, Size: ${chunkMB} MB`)
-
-				parts.push({ ETag, PartNumber: partParams.PartNumber })
-				chunkAccumulator = null
-
-				resolve({ Parts: parts })
-			}
-			catch (e) {
-
-				console.error(`Aws (multipartStream) -> error uploading last chunk to S3: ${e.toString()}`)
-				reject(e)
-			}
-		})
-	})
 }
 
 /**

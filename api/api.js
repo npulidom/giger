@@ -29,7 +29,7 @@ async function setup() {
 	// start/stop manually (every 30 secs)
 	CRON = new CronJob('0/30 * * * * *', async () => await processAsyncUploads(), null, false)
 	// active cron for file cleaning (every 12 hours)
-	new CronJob('0 0 */12 * * *', () => removeLimboFiles(), null, true)
+	new CronJob('0 0 */12 * * *', () => utils.removeLimboFiles(), null, true)
 }
 
 /**
@@ -116,7 +116,7 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 		// set options
 		const options = {
 
-			region    : meta.bucket.region ||'us-east-1',
+			region    : meta.bucket.region || 'us-east-1',
 			bucketName: meta.bucket.name,
 			basePath  : [meta.bucket.basePath, objectMeta.bucketPath, objectName + '-'].filter(o => o).join('/').replace(/\/{2,}/g, '/'),
 			maxage    : objectMeta.maxage,
