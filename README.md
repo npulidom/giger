@@ -65,7 +65,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
     "bucket": {
 
         "name": "my-bucket-name",
-        "basePath": "giger/", // optional, default is root
+        "basePath": "giger", // optional, default is root
         "region": "us-east-1" // default is "us-east-1"
     },
     "objects": {
@@ -77,7 +77,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
             "outputFormat": "webp",      // optional, default is same format as input image; options: webp, avif, jpeg, png
             "maxAge": 86400,             // optional, default is 1 year
             "acl": "public-read",        // optional, default is none (private)
-            "async": false,              // optional, async upload for big files, the output URLs will be saved later in another collection 'gigerAsyncUploads'
+            "async": false,              // optional, async multipart-upload for big files, the output URLs will be saved later in another collection
             "constraints": {
 
                 "minWidth": 300,  // optional

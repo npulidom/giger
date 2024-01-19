@@ -108,7 +108,7 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 
 			region    : meta.bucket.region ||'us-east-1',
 			bucketName: meta.bucket.name,
-			basePath  : [meta.bucket.basePath || '/', objectMeta.bucketPath, objectName].filter(o => o).join('/').replace(/\/{2,}/g, '/'),
+			basePath  : [meta.bucket.basePath, objectMeta.bucketPath, objectName + '-'].filter(o => o).join('/').replace(/\/{2,}/g, '/'),
 			maxage    : objectMeta.maxage,
 			acl       : objectMeta.acl,
 		}
@@ -124,7 +124,7 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 	catch (e) {
 
 		// remove local file
-		utils.removeFile(path)
+		utils.removeFile(filename)
 		throw e
 	}
 }
