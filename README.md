@@ -23,6 +23,7 @@ MONGO_COLLECTION: Mongo collection name, default is 'giger' (optional)
 ALLOWED_ORIGINS: CORS origin access (optional)
 AWS_ACCESS_KEY_ID: AWS Access Key ID (optional)
 AWS_SECRET_ACCESS_KEY: AWS Secret Access Key (optional)
+AWS_S3_TRANSFER_ACCELERATION: Enables S3 transfer acceleration mode (requires bucket setup opt-in), default is disabled (use "1" to enable).
 API_KEY: API Key used as basic security. API Key must be passed as header 'X-Api-Key' (optional)
 MAX_FILE_SIZE: The max file limit size in bytes for uploads, default is unlimited (optional)
 ```

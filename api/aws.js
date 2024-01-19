@@ -22,7 +22,12 @@ const DEFAULT_CHUCK_SIZE = 50*1024*1024 // 50 MB for chunk size
  */
 function getClient(region) {
 
-	return new S3Client({ region })
+	const opts = {}
+
+	if (parseInt(process.env.AWS_S3_TRANSFER_ACCELERATION))
+		opts.useAccelerateEndpoint = true
+
+	return new S3Client({ region, ...opts })
 }
 
 /**
@@ -144,7 +149,7 @@ function multipartStream(stream, client, { Bucket, Key, UploadId }, chunkSize) {
 
 	return new Promise((resolve, reject) => {
 
-		const multipartMap = { Parts: [] }
+		const parts = []
 
 		let partNumber = 1
 		let chunkAccumulator = null
@@ -178,7 +183,7 @@ function multipartStream(stream, client, { Bucket, Key, UploadId }, chunkSize) {
 				const { ETag } = await client.send(new UploadPartCommand(partParams))
 				console.log(`Aws (multipartStream) -> chunk uploaded, Part: ${partParams.PartNumber}, ETag: ${ETag}, Size: ${chunkMB} MB`)
 
-				multipartMap.Parts.push({ ETag, PartNumber: partParams.PartNumber })
+				parts.push({ ETag, PartNumber: partParams.PartNumber })
 				chunkAccumulator = null
 				partNumber++
 				// resume to read the next chunk
@@ -212,10 +217,10 @@ function multipartStream(stream, client, { Bucket, Key, UploadId }, chunkSize) {
 				const { ETag } = await client.send(new UploadPartCommand(partParams))
 				console.log(`Aws (multipartStream) -> last chunk uploaded, Part: ${partParams.PartNumber}, ETag: ${ETag}, Size: ${chunkMB} MB`)
 
-				multipartMap.Parts.push({ ETag, PartNumber: partParams.PartNumber })
+				parts.push({ ETag, PartNumber: partParams.PartNumber })
 				chunkAccumulator = null
 
-				resolve(multipartMap)
+				resolve({ Parts: parts })
 			}
 			catch (e) {
 
