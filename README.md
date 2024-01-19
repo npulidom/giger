@@ -57,7 +57,8 @@ Consider always to limit the permissions scope to the profile bucket.
 
 ## MongoDB JSON Struct
 
-A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created with at least the `default` **profile**. See `sample/db.json`.
+A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created with at least the `default` **profile**.
+See [sample/db.json](https://github.com/npulidom/giger/blob/master/sample/db.json).
 
 ```javascript
 {
