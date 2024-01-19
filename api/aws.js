@@ -124,7 +124,7 @@ async function multipartUpload(path, region, params) {
 	// set MultipartUpload
 	params.MultipartUpload = multipart
 
-	let { ETag } = await client.send(new CompleteMultipartUploadCommand(params))
+	const { ETag } = await client.send(new CompleteMultipartUploadCommand(params))
 	if (!ETag) throw 'MULTIPART_UPLOAD_UNEXPECTED_RESPONSE_LOCATION'
 
 	console.log(`Aws (multipartUpload) -> upload completed, ETag: ${ETag}, Key: ${params.Key}`)
