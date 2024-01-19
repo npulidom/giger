@@ -1,7 +1,7 @@
 # Giger
 
 Container service for image resize/compression with AWS S3 uploader (or S3 standalone uploads).
-The service uses a MongoDB collection to read resize/upload operation, support multiples profiles.
+The service requires a MongoDB collection to read resize/upload process information, supports multiples profiles.
 
 - Resize images in multiple sizes.
 - Validates image dimensions / aspect-ratio.
@@ -75,8 +75,8 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
             "bucketPath": "avatars/",    // optional, must end with '/'
             "mimeTypes": ["image/jpeg"], // required, accepted mime-types ['image/jpeg','image/png', 'image/webp']
             "outputFormat": "webp",      // optional, default is same format as input image (if supported); options: webp, avif, jpeg, png
-            "maxAge": 86400,             // optional, default is 1 year
             "acl": "public-read",        // optional, default is none (private)
+            "maxAge": 86400,             // optional, default is 1 year
             "async": false,              // optional, async multipart-upload for big files, the output URLs will be saved later in another collection
             "constraints": {
 

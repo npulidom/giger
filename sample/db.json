@@ -8,6 +8,7 @@
 	"objects": {
 		"avatar": {
 			"bucketPath": "avatars/",
+			"acl": "public-read",
 			"maxAge": 86400,
 			"constraints": {
 				"minWidth": 720,
