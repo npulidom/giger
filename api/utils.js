@@ -39,7 +39,7 @@ async function validateImage(path, { width, height, minWidth, minHeight, ratio }
  * Transforms an image
  * @param {object} file - The file object
  * @param {array} transforms - The transforms array
- * @param {array} outputFormat - The output format
+ * @param {string} outputFormat - The output format
  * @return {array}
  */
 async function transformImage({ path, filename }, transforms = [], outputFormat) {

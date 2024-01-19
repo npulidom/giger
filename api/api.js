@@ -84,7 +84,8 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 		if (!mimetype || !objectMeta.mimeTypes.includes(mimetype)) throw `FILE_NOT_SUPPORTED:${mimetype}`
 
 		// image validations
-		if (mimetype.match(/image/) && objectMeta.constraints) await utils.validateImage(path, objectMeta.constraints)
+		if (mimetype.match(/image/) && objectMeta.constraints)
+			await utils.validateImage(path, objectMeta.constraints)
 
 		// get nearest aspect ratio
 		const ratio = mimetype.match(/image/) ? await utils.nearestImageAspectRatio(path) : null
