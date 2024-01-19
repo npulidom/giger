@@ -96,7 +96,6 @@ async function nearestImageAspectRatio(path, maxWidth = 16, maxHeight = 16) {
 	if (needsRotation) {
 
 		const _width = width
-
 		width  = height
 		height = _width
 	}
