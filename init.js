@@ -18,7 +18,6 @@ let server
 
 /**
  * Init
- * @returns {undefined}
  */
 async function init() {
 

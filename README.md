@@ -76,7 +76,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
             "mimeTypes": ["image/jpeg"], // required, accepted mime-types ['image/jpeg','image/png', 'image/webp']
             "outputFormat": "webp",      // optional, default is same format as input image; options: webp, avif, jpeg, png
             "maxAge": 86400,             // optional, default is 1 year
-            "acl": "public-read",        // optional, default is private
+            "acl": "public-read",        // optional, default is none (private)
             "async": false,              // optional, async upload for big files, the output URLs will be saved later in another collection 'gigerAsyncUploads'
             "constraints": {
 
@@ -105,7 +105,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
                     "name": "B",
                     "width": 100,
                     "quality": 21,
-                    "blur": 8      // blur image (pixels)
+                    "blur": 8      // blur supported (pixels)
                 }
             ]
         },
