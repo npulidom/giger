@@ -93,14 +93,16 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 			filename = newFilename
 		}
 
-		console.log('Api (upload) -> processing new upload', filename), console.time(`process-file_${filename}`)
+		console.log('Api (processFile) -> processing new file', filename), console.time(`process-file_${filename}`)
 
 		const files = [{ path, filename, mimetype }]
 
 		// image transforms
 		if (mimetype.match(/image/) && Array.isArray(objectMeta.transforms)) {
 
-			files.push(...await utils.transformImage(files[0], objectMeta.transforms, objectMeta.outputFormat))
+			const outputFormat = objectMeta.outputFormat || mimetype.substring(mimetype.indexOf('/') + 1)
+
+			files.push(...await utils.transformImage(files[0], objectMeta.transforms, outputFormat))
 		}
 
 		// set options
@@ -118,7 +120,7 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 		// append aspect ratio?
 		if (ratio) result.ratio = ratio
 
-		console.log('Api (upload) -> completed process', filename), console.timeEnd(`process-file_${filename}`)
+		console.log('Api (processFile) -> completed process', filename), console.timeEnd(`process-file_${filename}`)
 		return result
 	}
 	catch (e) {

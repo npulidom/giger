@@ -39,10 +39,10 @@ async function validateImage(path, { width, height, minWidth, minHeight, ratio }
  * Transforms an image
  * @param {object} file - The file object
  * @param {array} transforms - The transforms array
- * @param {array} outputFormat - The output format, default is webp
+ * @param {array} outputFormat - The output format
  * @return {array}
  */
-async function transformImage({ path, filename }, transforms = [], outputFormat = 'webp') {
+async function transformImage({ path, filename }, transforms = [], outputFormat) {
 
 	console.time(`transform-image_${filename}`)
 
@@ -62,9 +62,9 @@ async function transformImage({ path, filename }, transforms = [], outputFormat 
 		// ++ blur
 		if (blur) await image.blur(blur)
 
-		const _filename  = `${filename}_${transformName}`
-		const _path      = `${TEMP_DIR}/${_filename}`
-		const _mimetype  = mimes.lookup(outputFormat)
+		const _filename = `${filename}_${transformName}`
+		const _path     = `${TEMP_DIR}/${_filename}`
+		const _mimetype = mimes.lookup(outputFormat)
 
 		// saves transformed image to disk
 		await image.toFormat(outputFormat, { quality }).toFile(_path)
