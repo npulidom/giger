@@ -9,7 +9,8 @@ import {
 	PutObjectCommand,
 	UploadPartCommand,
 	CreateMultipartUploadCommand,
-	CompleteMultipartUploadCommand
+	CompleteMultipartUploadCommand,
+	AbortMultipartUploadCommand,
 } from '@aws-sdk/client-s3'
 
 // ++ consts
@@ -116,25 +117,33 @@ async function multipartUpload(path, region, params) {
 	if (!UploadId) throw 'MULTIPART_UPLOAD_UNEXPECTED_RESPONSE_UPLOAD_ID'
 
 	// set UploadId
-	params.UploadId = UploadId
 	console.log(`Aws (multipartUpload) -> multipart created, UploadId: ${UploadId}`)
+	params.UploadId = UploadId
 
-	// read stream
-	const stream = fs.createReadStream(path)
-	// trigger chunks upload
-	const multipart = await multipartStream(stream, client, params, DEFAULT_CHUCK_SIZE)
+	try {
+		// read stream
+		const stream = fs.createReadStream(path)
+		// trigger chunks upload
+		const multipart = await multipartStream(stream, client, params, DEFAULT_CHUCK_SIZE)
 
-	console.log(`Aws (multipartUpload) -> all chunks upload (${multipart.Parts.length}), completing multipart upload ...`)
+		console.log(`Aws (multipartUpload) -> all chunks upload (${multipart.Parts.length}), completing multipart upload ...`)
 
-	// set MultipartUpload
-	params.MultipartUpload = multipart
+		// set MultipartUpload
+		params.MultipartUpload = multipart
 
-	const { ETag } = await client.send(new CompleteMultipartUploadCommand(params))
-	if (!ETag) throw 'MULTIPART_UPLOAD_UNEXPECTED_RESPONSE_LOCATION'
+		const { ETag } = await client.send(new CompleteMultipartUploadCommand(params))
+		if (!ETag) throw 'MULTIPART_UPLOAD_UNEXPECTED_RESPONSE_LOCATION'
 
-	console.log(`Aws (multipartUpload) -> upload completed, ETag: ${ETag}, Key: ${params.Key}`)
+		console.log(`Aws (multipartUpload) -> upload completed, ETag: ${ETag}, Key: ${params.Key}`)
+		// get location
+		return getS3URL(region, params.Bucket, params.Key)
+	}
+	catch (e) {
 
-	return getS3URL(region, params.Bucket, params.Key)
+		console.error(`Aws (multipartUpload) -> upload failed, UploadId: ${params.UploadId}`)
+		// abort multipart upload
+		await client.send(new AbortMultipartUploadCommand(params))
+	}
 }
 
 /**
