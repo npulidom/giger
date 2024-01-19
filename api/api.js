@@ -9,6 +9,11 @@ import * as aws   from './aws.js'
 import * as utils from './utils.js'
 
 /**
+ * Suported image output formats
+ */
+const SUPPORTED_OUTPUT_FORMATS = ['webp', 'avif', 'jpeg', 'png']
+
+/**
  * Cron instance
  */
 let CRON
@@ -101,6 +106,8 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 		if (mimetype.match(/image/) && Array.isArray(objectMeta.transforms)) {
 
 			const outputFormat = objectMeta.outputFormat || mimetype.substring(mimetype.indexOf('/') + 1)
+
+			if (!SUPPORTED_OUTPUT_FORMATS.includes(outputFormat)) throw `INVALID_OUTPUT_FORMAT:${outputFormat}`
 
 			files.push(...await utils.transformImage(files[0], objectMeta.transforms, outputFormat))
 		}
