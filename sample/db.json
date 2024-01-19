@@ -2,12 +2,12 @@
 	"name": "default",
 	"bucket": {
 		"name": "my-bucket-name",
-		"basePath": "giger/",
+		"basePath": "giger",
 		"region" :"us-east-1"
 	},
 	"objects": {
 		"avatar": {
-			"bucketPath": "avatars/",
+			"bucketPath": "avatars",
 			"acl": "public-read",
 			"maxAge": 86400,
 			"constraints": {
@@ -44,7 +44,7 @@
 			]
 		},
 		"video": {
-			"bucketPath": "videos/",
+			"bucketPath": "videos",
 			"maxAge": 86400,
 			"async": true,
 			"mimeTypes": [

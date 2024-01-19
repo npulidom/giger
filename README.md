@@ -72,7 +72,7 @@ A collection with name `{MONGO_COLLECTION}` (default is `giger`) must be created
 
         "avatar": {
 
-            "bucketPath": "avatars/",    // optional, must end with '/'
+            "bucketPath": "avatars",     // optional, subpath key prefix
             "mimeTypes": ["image/jpeg"], // required, accepted mime-types ['image/jpeg','image/png', 'image/webp']
             "outputFormat": "webp",      // optional, default is same format as input image (if supported); options: webp, avif, jpeg, png
             "acl": "public-read",        // optional, default is none (private)
