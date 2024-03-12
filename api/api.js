@@ -104,7 +104,7 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 		const files = [{ path, filename, mimetype }]
 
 		// image transforms
-		if (mimetype.match(/image/) && Array.isArray(objectMeta.transforms)) {
+		if (mimetype.match(/image/) && objectMeta.transforms?.length) {
 
 			const outputFormat = objectMeta.outputFormat || mimetype.substring(mimetype.indexOf('/') + 1)
 
