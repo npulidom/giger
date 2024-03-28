@@ -1,6 +1,7 @@
 {
-	"verbose": false,
-	"ignore": ["tmp/*"],
+	"verbose": true,
+	"ignore": ["**/tmp/**"],
+	"ext": "js",
 	"events": {
 		"start": "cls || clear"
 	}
