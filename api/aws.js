@@ -4,6 +4,7 @@
 
 import fs from 'fs'
 import mimes from 'mime-types'
+import { URL } from 'url'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { Upload } from "@aws-sdk/lib-storage"
 
@@ -26,7 +27,7 @@ function getClient(region) {
  * @param {array} files - The files array
  * @returns {array} - The output URLs
  */
-async function uploadToS3({ bucketName, basePath, region, maxAge, acl }, files = []) {
+async function uploadToS3({ region, bucketName, basePath, cloudfront, maxAge, acl }, files = []) {
 
 	if (!files.length) return
 
@@ -38,6 +39,10 @@ async function uploadToS3({ bucketName, basePath, region, maxAge, acl }, files =
 	}
 	// set ACL?
 	if (acl) params.ACL = acl
+
+	// check if basePath
+	if (basePath && basePath.startsWith('/'))
+		basePath = basePath.substring(1)
 
 	const urls = []
 	for (const { path, filename, mimetype } of files) {
@@ -66,6 +71,10 @@ async function uploadToS3({ bucketName, basePath, region, maxAge, acl }, files =
 			throw e
 		}
 	}
+
+	// use Cloudfront URLs?
+	if (cloudfront?.url)
+		return toCloudFrontURLs(urls, cloudfront.url, cloudfront.excludePath)
 
 	return urls
 }
@@ -152,6 +161,49 @@ function getS3URL(region, bucketName, key) {
 	if (region == 'us-east-1') return `https://${bucketName}.s3.amazonaws.com/${key}`
 
 	return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`
+}
+
+/**
+ * Converts a list of S3 URLs to CloudFront URLs
+ * @param {array} urls - The list of S3 URLs
+ * @param {string} cloudfrontUrl - The CloudFront URL
+ * @param {string} excludePath - S3 path to exclude (optional)
+ * @returns {undefined}
+ */
+function toCloudFrontURLs(urls, cloudfrontUrl, excludePath = '') {
+
+	// remove ending slash?
+	if (cloudfrontUrl.endsWith('/'))
+		cloudfrontUrl = cloudfrontUrl.substring(0, cloudfrontUrl.length - 1)
+
+	// remove ending slash?
+	if (excludePath.endsWith('/'))
+		excludePath = excludePath.substring(0, excludePath.length - 1)
+
+	// remove starting slash?
+	if (excludePath.startsWith('/'))
+		excludePath = excludePath.substring(1)
+
+	return urls.map(url => {
+
+		try {
+
+			// get path from URL
+			let { pathname } = new URL(url)
+
+			// exclude path?
+			if (excludePath) pathname = pathname.replace(excludePath, '')
+
+			// clean concatenated slashes
+			pathname = pathname.replace(/\/{2,}/g, '/')
+
+			// append slash?
+			if (!pathname.startsWith('/')) pathname = `/${pathname}`
+
+			return `${cloudfrontUrl}${pathname}`
+		}
+		catch (e) { return url }
+	})
 }
 
 /**

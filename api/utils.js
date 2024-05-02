@@ -183,6 +183,16 @@ function removeLimboFiles() {
 }
 
 /**
+ * Join Path Helper
+ * @param  {...string} args
+ * @returns {string}
+ */
+function joinPath(...args) {
+
+	return args.filter(o => o).join('/').replace(/\/{2,}/g, '/')
+}
+
+/**
  * Export
  */
 export {
@@ -193,4 +203,5 @@ export {
 	renameFile,
 	removeFile,
 	removeLimboFiles,
+	joinPath,
 }

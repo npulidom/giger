@@ -65,9 +65,14 @@ See [sample/db.json](https://github.com/npulidom/giger/blob/master/sample/db.jso
     "name": "default", // required, the profile name
     "bucket": {
 
-        "name": "my-bucket-name",
-        "basePath": "giger", // optional, default is root
-        "region": "us-east-1" // default is "us-east-1"
+        "name": "my-bucket-name", // the bucket name
+        "basePath": "giger",      // optional, default is root
+        "region": "us-east-1",    // default is "us-east-1"
+        "cloudfront": {           // overrides S3 URL with a Cloudfront URL (optional)
+
+            "url": "https://some.custom.site", // the Cloudfront URL
+            "excludePath": "giger"             // exclude s3-path for Cloudfront URL (optional)
+        }
     },
     "objects": {
 
