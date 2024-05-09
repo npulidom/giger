@@ -4,7 +4,6 @@
 
 import fs from 'fs'
 import mimes from 'mime-types'
-import { URL } from 'url'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { Upload } from "@aws-sdk/lib-storage"
 
