@@ -27,7 +27,7 @@ services:
       - data-mongo:/data/db
   # reverse proxy
   nginx-proxy:
-    image: nginxproxy/nginx-proxy:dev-alpine
+    image: nginxproxy/nginx-proxy:alpine
     container_name: g-proxy
     ports:
       - "80:80"
