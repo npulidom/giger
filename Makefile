@@ -7,7 +7,7 @@ docker-build-dev:
 	docker build -t npulidom/giger:dev --build-arg BUILD_ID="$(BUILD_ID)" --target dev .
 
 docker-build-prod:
-	docker build -t npulidom/giger --build-arg BUILD_ID="$(BUILD_ID)" --target prod .
+	docker build -t npulidom/giger --build-arg BUILD_ID="$(BUILD_ID)" --target prod --platform linux/amd64 .
 
 docker-push:
 	docker push npulidom/giger
