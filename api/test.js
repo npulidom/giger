@@ -28,7 +28,7 @@ async function resize(req, res) {
 	catch (e) {
 
 		console.error(`Test (resize) -> exception`, e)
-		res.json({ status: 'error', error: e.toString() })
+		res.status(418).json({ status: 'error', error: e.toString() })
 	}
 
 	console.timeEnd('test-resize')

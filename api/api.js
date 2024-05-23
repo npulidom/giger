@@ -56,7 +56,7 @@ async function upload(req, res) {
 	catch (e) {
 
 		console.error('Api (upload) -> exception', e)
-		res.json({ status: 'error', error: e.toString() })
+		res.status(418).json({ status: 'error', error: e.toString() })
 	}
 }
 
