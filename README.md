@@ -132,7 +132,7 @@ See [sample/db.json](https://github.com/npulidom/giger/blob/master/sample/db.jso
 Pull image
 
 ```bash
-docker pull npulidom/prerender
+docker pull npulidom/giger
 ```
 
 Run the container
