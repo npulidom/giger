@@ -4,16 +4,25 @@
 
 import { MongoClient } from 'mongodb'
 
-// ++ consts
-const _COLLECTION = process.env.MONGO_COLLECTION || 'giger'
+/**
+ * Default Mongo Collection
+ * @constant {string} DEFAULT_COLLECTION - The default collection
+ */
+const DEFAULT_COLLECTION = process.env.MONGO_COLLECTION || 'giger'
+
+/**
+ * Collection
+ * @constant {object} COLLECTION - The collection names
+ */
 const COLLECTIONS = {
 
-	default     : _COLLECTION,
-	asyncUploads: `${_COLLECTION}AsyncUploads`
+	default     : DEFAULT_COLLECTION,
+	asyncUploads: `${DEFAULT_COLLECTION}AsyncUploads`
 }
 
 /**
  * DB instance
+ * @property {object} DB - The database instance
  */
 let DB
 
@@ -56,7 +65,7 @@ async function getAsyncUploads(query = {}) {
 /**
  * Get Count Async Uploads
  * @param {object} query - The query object
- * @returns {int}
+ * @returns {number}
  */
 async function countAsyncUploads(query = {}) {
 

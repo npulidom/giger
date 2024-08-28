@@ -7,7 +7,10 @@ import mimes from 'mime-types'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { Upload } from "@aws-sdk/lib-storage"
 
-// ++ consts
+/**
+ * Multipart Chuck Size
+ * @constant {number} MULTIPART_CHUCK_SIZE - The multipart chunk size
+ */
 const MULTIPART_CHUCK_SIZE = 50*1024*1024 // 50 MB for chunk size
 
 /**

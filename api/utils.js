@@ -6,7 +6,10 @@ import fs    from 'fs'
 import mimes from 'mime-types'
 import sharp from 'sharp'
 
-// ++ consts
+/**
+ * Temp Directory
+ * @constant {string} TEMP_DIR - The temp directory
+ */
 const TEMP_DIR = 'tmp'
 
 /**
@@ -80,8 +83,8 @@ async function transformImage({ path, filename }, transforms = [], outputFormat)
 /**
  * Nearest Aspect Ratio calculator for images
  * @param {string} path - The input file path
- * @param {integer} maxWidth - The maximum width in the nearest normal aspect ratio (optional)
- * @param {integer} maxWidth - The maximum height in the nearest normal aspect ratio (optional)
+ * @param {number} maxWidth - The maximum width in the nearest normal aspect ratio (optional)
+ * @param {number} maxWidth - The maximum height in the nearest normal aspect ratio (optional)
  * @return {string}
  */
 async function nearestImageAspectRatio(path, maxWidth = 16, maxHeight = 16) {
@@ -184,7 +187,7 @@ function removeLimboFiles() {
 
 /**
  * Join Path Helper
- * @param  {...string} args
+ * @param {...string} args - The path parts
  * @returns {string}
  */
 function joinPath(...args) {

@@ -10,11 +10,13 @@ import * as utils from './utils.js'
 
 /**
  * Suported image output formats
+ * @constant {array} SUPPORTED_OUTPUT_FORMATS - The supported image output formats
  */
 const SUPPORTED_OUTPUT_FORMATS = ['webp', 'avif', 'jpeg', 'png']
 
 /**
  * Cron instance
+ * @property {object} CRON - The cron instance
  */
 let CRON
 
@@ -66,7 +68,7 @@ async function upload(req, res) {
  * @param {string} profile - The upload profile
  * @param {string} objectName - The object name in the profile
  * @param {string} tag - An optional tag to rename the input file
- * @returns {bject}
+ * @returns {object}
  */
 async function processFile({ path, filename, mimetype }, profile, objectName, tag) {
 

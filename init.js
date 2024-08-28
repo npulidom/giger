@@ -8,11 +8,22 @@ import multer  from 'multer'
 import * as api  from './api/api.js'
 import * as test from './api/test.js'
 
-// ++ consts
+/**
+ * Version
+ * @constant {string} VERSION - The build version
+ */
 const VERSION = process.env.BUILD_ID
+
+/**
+ * Temp Directory
+ * @constant {string} TEMP_DIR - The temp directory
+ */
 const TEMP_DIR = 'tmp'
 
-// ++ props
+/**
+ * Server
+ * @property {object} server - The server instance
+ */
 let server
 
 /**
