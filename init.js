@@ -113,7 +113,7 @@ async function init() {
 
 	// ++ start server
 	server = await app.listen(80)
-	console.log(`Init -> server up at ${new Date().toString()}, version: ${VERSION}`)
+	console.log(`Init -> server up at ${new Date().toString()}, version=${VERSION}`)
 }
 
 /**
