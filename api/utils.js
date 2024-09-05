@@ -155,7 +155,7 @@ function removeFile(filename) {
 
 	for (const f of files) {
 
-		console.log(`Utils (removeFile) -> removing file: ${TEMP_DIR}/${f}`)
+		console.log(`Utils (removeFile) -> removing file, filepath=${TEMP_DIR}/${f}`)
 		fs.unlinkSync(`${TEMP_DIR}/${f}`)
 	}
 }
@@ -181,7 +181,7 @@ function removeLimboFiles() {
 			if (diff >= 43_200_000)
 				removeFile(f)
 		}
-		catch (e) { console.warn(`Utils (removeLimboFiles) -> failed reading file ${f}`, e.toString()) }
+		catch (e) { console.warn(`Utils (removeLimboFiles) -> failed reading file, filepath=${f}`, e.toString()) }
 	}
 }
 

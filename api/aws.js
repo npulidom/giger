@@ -69,7 +69,7 @@ async function uploadToS3({ region, bucketName, basePath, cloudfront, maxAge, ac
 		}
 		catch (e) {
 
-			console.error(`Aws (uploadToS3) -> upload failed ${filename}`, e.toString())
+			console.error(`Aws (uploadToS3) -> upload failed, filename=${filename}`, e.toString())
 			throw e
 		}
 	}
@@ -116,7 +116,7 @@ async function multipartUpload(path, region, params) {
 
 	try {
 
-		console.log(`Aws (multipartUpload) -> new multipart upload: ${path}`)
+		console.log(`Aws (multipartUpload) -> new multipart upload, filepath=${path}`)
 
 		// read stream
 		const stream = fs.createReadStream(path)
@@ -133,19 +133,19 @@ async function multipartUpload(path, region, params) {
 			leavePartsOnError: false
 		})
 		// progress listener
-		uploads.on(`httpUploadProgress`, progress => console.log(`Aws (multipartUpload) -> upload-progress file: ${path}`, progress))
+		uploads.on(`httpUploadProgress`, progress => console.log(`Aws (multipartUpload) -> upload-progress, filepath=${path}`, progress))
 
 		// trigger chunk uploads
 		await uploads.done()
 
-		console.log(`Aws (multipartUpload) -> multipart upload completed: ${path}`)
+		console.log(`Aws (multipartUpload) -> multipart upload completed, filepath=${path}`)
 
 		// get location
 		return getS3URL(region, params.Bucket, params.Key)
 	}
 	catch (e) {
 
-		console.error(`Aws (multipartUpload) -> multipart upload failed: ${path}`, e.toString())
+		console.error(`Aws (multipartUpload) -> multipart upload failed, filepath=${path}`, e.toString())
 		throw e
 	}
 }

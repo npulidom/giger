@@ -156,7 +156,7 @@ async function storeFiles(options, files, async) {
 	// async mode (wait response)?
 	if (async) {
 
-		console.log(`Api (storeFiles) -> async-mode: ${JSON.stringify(src)}`)
+		console.log(`Api (storeFiles) -> async-mode, src=${JSON.stringify(src)}`)
 
 		// save pending upload in db
 		const _id = await mongo.insertAsyncUpload({ options, files, status: 'pending', createdAt: new Date() })
@@ -191,7 +191,7 @@ async function processAsyncUploads() {
 
 			try {
 
-				console.log(`Api (processAsyncUploads) -> pushing to S3: ${JSON.stringify(files)}`)
+				console.log(`Api (processAsyncUploads) -> pushing to S3, files=${JSON.stringify(files)}`)
 
 				// lock status
 				await mongo.updateAsyncUpload(_id, { status: 'uploading' })
