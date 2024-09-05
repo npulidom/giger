@@ -101,7 +101,8 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 			filename = newFilename
 		}
 
-		console.log('Api (processFile) -> processing new file', filename), console.time(`process-file_${filename}`)
+		console.log('Api (processFile) -> processing new file', filename)
+		console.time(`process-file_${filename}`)
 
 		const files = [{ path, filename, mimetype }]
 
@@ -131,7 +132,9 @@ async function processFile({ path, filename, mimetype }, profile, objectName, ta
 		// append aspect ratio?
 		if (ratio) result.ratio = ratio
 
-		console.log('Api (processFile) -> completed process', filename), console.timeEnd(`process-file_${filename}`)
+		console.log('Api (processFile) -> completed process', filename)
+		console.timeEnd(`process-file_${filename}`)
+
 		return result
 	}
 	catch (e) {
