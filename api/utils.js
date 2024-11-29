@@ -32,7 +32,8 @@ async function validateImage(path, { width, height, minWidth, minHeight, ratio }
 
 		const r = ratio.split('/')
 
-		if ((r[0]/r[1]).toFixed(1) != (image.width/image.height).toFixed(1)) throw 'FILE_INVALID_RATIO'
+		if ((r[0]/r[1]).toFixed(1) != (image.width/image.height).toFixed(1))
+			throw 'FILE_INVALID_RATIO'
 	}
 
 	return true
